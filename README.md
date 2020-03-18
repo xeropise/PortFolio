@@ -242,3 +242,12 @@
      /mmm/WebContent/ticketing/addCompareTicketing.jsp 극장별 비교예매  
      /mmm/WebContent/ticketing/addTicketing.jsp 일반 예매   
      /mmm/WebContent/ticketing/addTicketing.jsp 좌석 선택  
+     
+  3. 이외에 참조해야 할 것,
+   src/main/resources // sql 
+    TicketingMapper.xml,
+    DateTimeMapper.xml
+    
+    
+   
+   다른 궁금한것이 있다면 xeropise1@hanmail.net로 연락부탁드립니다.
