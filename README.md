@@ -221,3 +221,24 @@
   2. 협업을 중요성을 깨달았습니다. 내 개발속도만 빨라 다른사람을 배려하지 못하면, 거기서 틀어질 수 있습니다.   
       상대방에 대한 배려가 반드시 필요합니다. 개발은 혼자 하는것이 아님을 깨달았습니다.  
   
+  
+  
+  코드를 보실분은
+  ***다음 패키지를 참조해주세요 ***
+  
+  0. 공통
+  => com.mmm.common // JavaUtil.java
+     com.mmm.common // Search.java
+  
+  1. 크롤링을 참조하고 싶은 경우
+  => com.mmm.service.datetime.test // DateTimeServiceTest.java
+      ( 크롬드라이버 작동이니 드라이버가 반드시있어야합니다 )
+      
+  2. 예매를 참조 하고 싶은 경우,
+  => com.mm.service.domain // Ticketing.java,  DateTime.java
+     com.mmm.service.ticketing 모두
+     com.mmm.service.ticketing.impl
+     
+     /mmm/WebContent/ticketing/addCompareTicketing.jsp 극장별 비교예매  
+     /mmm/WebContent/ticketing/addTicketing.jsp 일반 예매   
+     /mmm/WebContent/ticketing/addTicketing.jsp 좌석 선택  
