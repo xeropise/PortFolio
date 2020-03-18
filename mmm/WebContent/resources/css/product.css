@@ -1,0 +1,236 @@
+
+/* 공통  */
+
+#body {
+            
+            font-family: 'Noto Sans KR', sans-serif;
+}
+
+
+/*                          PRODUCT                                */
+/*                        addProdAd.jsp                            */
+
+
+
+#addProdImage{
+    margin-top: 10px;
+	float:left;
+}
+
+ #addProdDivGroup{
+      	margin-left: 170px;
+}
+
+ #addProdDiv{
+      margin-top: 25px;
+      margin-bottom: 55px;
+      width: 836px;
+      box-shadow: 5px 5px 5px 3px gray;
+}
+
+
+	
+#addProdInput{
+		padding-right: 0px; 
+		padding-left: 20px; 
+		margin-top: 0px; 
+		margin-left: 0px;  
+		margin-right: 40px; 
+		border-right-width:1px;  
+		width: 421px; 
+		border: ridge;
+}
+
+
+/*                            updateProdAd.jsp                           */
+
+
+#updateProdImage{
+	padding-right: 0px;  
+	padding-left: 20px;  
+	margin-right: 40px; 
+	border-right-width: 1px;  
+	width: 421px; 
+	border: ridge ;
+    margin-top: 10px;
+	float:left;
+}
+
+#updateProdDiv{
+     margin-top: 25px;
+      margin-bottom: 55px;
+      width: 836px;
+      box-shadow: 5px 5px 5px 3px gray;
+}
+
+#updateProdDivGroup{
+      	margin-left: 170px;
+}
+
+#updateProdForm{
+      margin-left: 30px;
+}
+
+#updateProdBtn{
+	background-color: #fee50e;
+	color: black;
+	outline-color: #fee50e;
+}
+
+#updateProdInput{
+	padding-right: 0px;  
+	padding-left: 20px;  
+	margin-top: 0px;  
+	margin-right: 40px; 
+	border-right-width: 1px;  
+	width: 421px; 
+	border: ridge ;
+}
+
+/*                         getProdList.jsp                              */
+
+#productList{
+	margin-top: 10px;
+	float:left;
+	margin: 10px 40px;
+	padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+#getProdListImg{
+	width: 250px;
+	height: 250px;
+	box-shadow: 5px 5px 5px 3px gray;
+}
+
+
+#getProdListProdName{
+	margin: 20px;
+}
+
+#getProdListProdPrice{
+	margin: 20px;
+}
+
+
+/*                         getProd.jsp                              */
+
+
+#getProdImg{
+	width : 400px;
+    height : 400px;
+	float:left;
+	box-shadow: 5px 3px 2px 2px #c0c0c0;
+}
+
+
+
+/*                         getQuickOrder.jsp                              */
+
+
+#shoppingCart{
+		width : 50px;
+		position:fixed;
+		right:10px;
+		bottom:0px;
+		z-index:1000
+}
+
+
+
+
+form > div > div > span.name{
+		width : 166px;	
+}  
+
+
+#QuickProdList{
+	margin-top: 10px;
+	float:left;
+	margin: 10px 35px;
+	box-shadow: 5px 3px 2px 2px #c0c0c0;
+} 
+
+#QuickProdImg{
+	width: 200px;
+	height: 200px;
+}
+
+#QuickModalhead{
+	background-color: #fee50e;
+}
+
+#QuickModal{
+	border-color: #fee50e;
+}
+
+
+/*                      	      PURCHASE                                */
+/*                        getInventoryList.jsp                            */
+
+
+#inven{
+	box-shadow: 5px 3px 2px 2px #c0c0c0;
+    margin-top: 10px;
+	float:left;
+	margin: 10px 40px;
+	padding-top: 10px;
+}
+
+
+#inventoryImg{
+	width: 165px;
+	height: 150px;
+}
+
+#inventoryModalhead{
+	background-color: #fee50e;
+}
+
+#inventoryModal{
+	border-color: #fee50e;
+}
+
+
+
+/*                        getPurchaseList.jsp                            */
+
+
+img.cancelButton {
+	cursor : pointer;
+}
+
+#modalhead{
+	background-color: #fee50e;
+}
+
+#purchaseListBtn{
+	background-color: #fee50e;
+	color: black;
+	outline-style: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 	

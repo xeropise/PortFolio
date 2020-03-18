@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="MovieMapper">
+
+	<resultMap type="Movie" id="movieSelectMap">
+		<result property="movieNo"					column="movie_no"				jdbcType="NUMERIC"/>
+		<result property="movieTitle"				column="movie_title"			jdbcType="VARCHAR"/>
+		<result property="releaseDate"				column="release_date"			jdbcType="DATE"/>
+		<result property="kmdbCd"					column="kmdb_code"				jdbcType="VARCHAR"/>
+		<result property="movieRating"				column="movie_rating"			jdbcType="NUMERIC"/>
+		<result property="onBoxOfficeFlag"			column="onBoxOffice_flag"		jdbcType="NUMERIC"/>
+		<result property="starRating"				column="star_rate"				jdbcType="NUMERIC"/>
+		<result property="audienceCnt"				column="audience_cnt"			jdbcType="NUMERIC"/>
+		<result property="wishCnt"					column="wish_cnt"				jdbcType="NUMERIC"/>
+		<result property="runningTime" 				column="running_time"			jdbcType="NUMERIC"/>
+		<result property="summary" 					column="summary"				jdbcType="VARCHAR"/>
+		<result property="poster" 					column="poster"					jdbcType="VARCHAR"/>
+		<result property="wishUserFlag" 			column="wish_user_flag"			jdbcType="NUMERIC"/>
+		<result property="starByUser" 				column="star_user"				jdbcType="NUMERIC"/>
+		<result property="starUserFlag" 			column="star_flag"				jdbcType="NUMERIC"/>
+		<result property="ticketingRate" 			column="ticketing_rate"				jdbcType="NUMERIC"/>
+	</resultMap>
+	
+	<resultMap type="WishStarRating" id="wishStarRatingMap">
+		<result property="wishNo"					column="WISH_NO"				jdbcType="NUMERIC"/>
+		<result property="starRatingNo"				column="STAR_RATING_NO"			jdbcType="NUMERIC"/>
+		<result property="movieNo"					column="MOVIE_NO"				jdbcType="NUMERIC"/>
+		<result property="userNo"					column="USER_NO"				jdbcType="NUMERIC"/>
+		<result property="starByUser"				column="STAR_RATE"				jdbcType="NUMERIC"/>
+		<result property="wishDate"					column="WISH_DATE"				jdbcType="DATE"/>
+		<result property="ratingDate"				column="RATE_DATE"				jdbcType="DATE"/>
+	</resultMap>
+	
+	<sql id="select-wishMovies">
+	
+		SELECT
+		m.MOVIE_NO, m.MOVIE_TITLE, m.poster, m.MOVIE_RATING, TO_CHAR(m.release_date, 'YYYY-MM-DD') release_date, 
+		m.KMDB_CODE, m.ONBOXOFFICE_FLAG, t.WISH_CNT WISH_CNT, w.WISH_DATE, s.star_rate,
+		NVL2(c.wish_no, '1', '0') wish_user_flag, NVL(r.star_rate, '0') star_user
+		FROM 
+		MOVIE m, WISH w, (SELECT MOVIE_NO, COUNT(*) WISH_CNT
+								FROM WISH 
+								GROUP BY MOVIE_NO			)t,
+						(SELECT MOVIE_NO, ROUND(AVG(STAR_RATE), 2) STAR_RATE
+								FROM STAR_RATING
+								GROUP BY MOVIE_NO
+						) s,
+									(
+						SELECT MOVIE_NO, COUNT(wish_no) wish_no
+						FROM WISH 
+						WHERE USER_NO = ${userNo}
+						GROUP BY MOVIE_NO
+						) c,
+						(
+						SELECT MOVIE_NO, STAR_RATE
+						FROM STAR_RATING
+						WHERE USER_NO = ${userNo}
+						) r
+		WHERE m.MOVIE_NO = w.MOVIE_NO
+			AND m.MOVIE_NO = t.movie_no(+)
+			AND m.MOVIE_NO = s.Movie_no(+)
+			AND m.MOVIE_NO = c.movie_no(+)
+			AND m.MOVIE_NO = r.movie_no(+)
+			AND w.USER_NO = ${userNo}
+		<choose>
+			<when test="viewCondition !=''  and viewCondition == 1">
+				ORDER BY s.star_RATE DESC NULLS LAST
+			</when>
+			<when test="viewCondition !=''  and viewCondition == 2">
+				</when>
+			<otherwise>ORDER BY w.WISH_DATE DESC</otherwise>
+		</choose>
+	
+	</sql>
+	
+	<sql id="select-BoxOffice">
+		SELECT
+		m.movie_no, m.movie_title, m.kmdb_code,  m.poster, m.running_time, m.summary,
+		m.movie_rating, TO_CHAR(release_date, 'YYYY-MM-DD') release_date, NVL(m.onBoxOffice_flag, 0) onBoxOffice_flag, 
+		t.star_RATE, s.WISH_CNT, NVL2(c.wish_no, '1', '0') wish_user_flag, NVL(r.star_rate, '0') star_user, tc.ticketing_rate
+		FROM(
+			SELECT 
+			MOVIE_NO, ROUND(AVG(STAR_RATE), 2) STAR_RATE
+			FROM STAR_RATING 
+			GROUP BY MOVIE_NO
+			) t, 
+			(
+			SELECT  MOVIE_NO , COUNT(*) WISH_CNT
+			FROM WISH 
+			GROUP BY MOVIE_NO
+			) s,
+			(
+			SELECT MOVIE_NO, COUNT(wish_no) wish_no
+			FROM WISH 
+			WHERE USER_NO = #{userNo:NUMERIC}
+			GROUP BY MOVIE_NO
+			) c,
+			(
+			SELECT MOVIE_NO, STAR_RATE
+			FROM STAR_RATING
+			WHERE USER_NO = #{userNo:NUMERIC}
+			) r,
+			(
+			SELECT m.movie_no, m.MOVIE_TITLE, NVL(ROUND((s.tic_cnt / t.total_tic_cnt), 3)*100, '0') ticketing_rate
+			FROM MOVIE m,
+				(SELECT  movie_name, count(*) tic_cnt FROM TICKETING WHERE TICKETING_DATE >= (SYSDATE -7) GROUP BY  movie_name) s,
+				(SELECT count(*) total_tic_cnt FROM TICKETING WHERE TICKETING_DATE >= (SYSDATE -7)) t
+			WHERE m.MOVIE_TITLE = s. movie_name(+)
+			) tc,
+			<if test="onBoxOfficeFlag !=null and onBoxOfficeFlag == 1">
+			(
+			SELECT 
+			DISTINCT MOVIE_NAME 
+			FROM DATE_TIME
+			) d ,	
+			</if>
+			movie m
+		WHERE m.MOVIE_NO = t.movie_no(+)
+			AND m.MOVIE_NO = s.movie_no(+)
+			AND m.MOVIE_NO = c.movie_no(+)
+			AND m.MOVIE_NO = r.movie_no(+)
+			AND m.MOVIE_NO = tc.movie_no(+)
+			<if test="onBoxOfficeFlag !=null and onBoxOfficeFlag == 1">AND REPLACE(m.MOVIE_TITLE , ' ','') = REPLACE(d.movie_NAME, ' ' ,'')</if>	
+		<choose>
+<!-- 		0이면 상영예정작 조회 / 1이면 박스오피스 조회 -->
+			<when test="onBoxOfficeFlag !=null and onBoxOfficeFlag == 0">
+				AND NVL(m.onBoxOffice_flag, 0) = 0
+			</when>
+			<otherwise>AND NVL(m.onBoxOffice_flag, 0) = 1</otherwise>
+		</choose>
+		<choose>
+			<when test="onBoxOfficeFlag !=null and onBoxOfficeFlag == 0">
+			ORDER BY m.release_date, m.movie_no
+			</when>
+				
+<!-- 				예매율로 정렬 -->
+			<otherwise>ORDER BY  tc.ticketing_rate DESC , t.star_RATE DESC NULLS LAST, m.movie_no</otherwise>
+		</choose>
+	</sql>
+	
+	
+<!-- 	영화 관리번호로 영화가져오기 -->
+	<select id="getMovieByMovieNo"
+			parameterType = "Movie"
+			resultMap= "movieSelectMap">
+			
+		SELECT
+		m.movie_no, m.movie_title, m.kmdb_code, m.poster, m.running_time, m.summary,
+		m.movie_rating, TO_CHAR(release_date, 'YYYY-MM-DD') release_date, m.onBoxOffice_flag, 
+		t.star_RATE, w.WISH_CNT, NVL2(c.wish_no, '1', '0') wish_user_flag,
+		NVL(s.star_rate, '0') star_user, NVL2(s.star_rate, '1', '0') star_flag, tc.ticketing_rate
+		FROM(
+			SELECT 
+			MOVIE_NO, ROUND(AVG(STAR_RATE), 2) STAR_RATE
+			FROM STAR_RATING 
+			GROUP BY MOVIE_NO
+			) t, 
+			(
+			SELECT  MOVIE_NO , COUNT(*) WISH_CNT
+			FROM WISH 
+			GROUP BY MOVIE_NO
+			) w,
+			(
+			SELECT MOVIE_NO, COUNT(wish_no) wish_no
+			FROM WISH 
+			WHERE USER_NO = #{userNo:NUMERIC}
+			GROUP BY MOVIE_NO
+			) c,
+			(
+			SELECT MOVIE_NO, STAR_RATE
+			FROM STAR_RATING
+			WHERE USER_NO = #{userNo:NUMERIC}
+			) s,
+			(SELECT m.movie_no, m.MOVIE_TITLE, NVL(ROUND((s.tic_cnt / t.total_tic_cnt), 3)*100, '0') ticketing_rate
+			FROM MOVIE m,
+				(SELECT  movie_name, count(*) tic_cnt FROM TICKETING WHERE TICKETING_DATE >= (SYSDATE -7) GROUP BY  movie_name) s,
+				(SELECT count(*) total_tic_cnt FROM TICKETING WHERE TICKETING_DATE >= (SYSDATE -7)) t
+			WHERE m.MOVIE_TITLE = s. movie_name(+)
+			) tc, movie m
+		WHERE m.MOVIE_NO = t.movie_no(+)
+			AND m.MOVIE_NO = w.movie_no(+)
+			AND m.MOVIE_NO = c.movie_no(+)
+			AND m.MOVIE_NO = s.movie_no(+)
+			AND m.MOVIE_NO = tc.movie_no(+)
+			AND m.movie_no = #{movieNo}
+			
+	</select>
+	
+<!-- 	 영화제목으로 영화가져오기 -->
+	<select id="getMovieByMovieTitle"
+			parameterType="Movie"
+			resultMap= "movieSelectMap">
+			
+		SELECT
+		m.movie_no, m.movie_title, m.kmdb_code, m.poster, m.running_time, m.summary,
+		m.movie_rating, TO_CHAR(release_date, 'YYYY-MM-DD') release_date, m.onBoxOffice_flag, 
+		t.star_RATE, w.WISH_CNT, NVL2(c.wish_no, '1', '0') wish_user_flag,
+		NVL(s.star_rate, '0') star_user, NVL2(s.star_rate, '1', '0') star_flag, tc.ticketing_rate
+		FROM(
+			SELECT 
+			MOVIE_NO, ROUND(AVG(STAR_RATE), 2) STAR_RATE
+			FROM STAR_RATING 
+			GROUP BY MOVIE_NO
+			) t, 
+			(
+			SELECT  MOVIE_NO , COUNT(*) WISH_CNT
+			FROM WISH 
+			GROUP BY MOVIE_NO
+			) w,
+			(
+			SELECT MOVIE_NO, COUNT(wish_no) wish_no
+			FROM WISH 
+			WHERE USER_NO = #{userNo:NUMERIC}
+			GROUP BY MOVIE_NO
+			) c,
+			(
+			SELECT MOVIE_NO, STAR_RATE
+			FROM STAR_RATING
+			WHERE USER_NO = #{userNo:NUMERIC}
+			) s,
+			(SELECT m.movie_no, m.MOVIE_TITLE, NVL(ROUND((s.tic_cnt / t.total_tic_cnt), 3)*100, '0') ticketing_rate
+			FROM MOVIE m,
+				(SELECT  movie_name, count(*) tic_cnt FROM TICKETING WHERE TICKETING_DATE >= (SYSDATE -7) GROUP BY  movie_name) s,
+				(SELECT count(*) total_tic_cnt FROM TICKETING WHERE TICKETING_DATE >= (SYSDATE -7)) t
+			WHERE m.MOVIE_TITLE = s. movie_name(+)
+			) tc, movie m
+		WHERE m.MOVIE_NO = t.movie_no(+)
+			AND m.MOVIE_NO = w.movie_no(+)
+			AND m.MOVIE_NO = c.movie_no(+)
+			AND m.MOVIE_NO = s.movie_no(+)
+			AND m.MOVIE_NO = tc.movie_no(+)
+			AND REPLACE(m.movie_title, ' ', '') = REPLACE(#{movieTitle}, ' ', '')
+			
+	</select>
+	
+	
+<!-- 	영화의 장르 리스트 가져오기 -->
+	<select id="getMovieGenreList"
+			parameterType="int"
+			resultType="String">
+		SELECT
+		genre
+		FROM MOVIE_GENRE
+		WHERE movie_no = #{value}
+		ORDER BY genre
+		
+	</select>
+	
+<!-- 	 영화 추가하기 ... addMovieGenre() 와 동시에 작동 -->
+	<insert id="addMovie"
+			parameterType="Movie">
+		INSERT
+		INTO movie(movie_no, MOVIE_title, release_date, kmdb_code, movie_rating, running_time, poster, summary, onBoxOffice_flag)
+		VALUES(seq_movie_movie_no.nextval, 
+				#{movieTitle},
+				#{releaseDate},
+				#{kmdbCd: VARCHAR},
+				#{movieRating: VARCHAR},
+				#{runningTime: NUMERIC},
+				#{poster: VARCHAR},
+				#{summary:VARCHAR},
+				#{onBoxOfficeFlag: NUMERIC}
+										)
+				
+	</insert>
+	
+	
+<!-- 	영화의 장르 추가하기 ... addMovie()와 동시에 작동 -->
+	<insert id="addMovieGenre"
+			parameterType="map">
+		INSERT
+		INTO movie_genre
+		VALUES(seq_movie_genre_movie_genre_no.nextval,
+				seq_movie_movie_no.currval,
+				#{genre})
+	</insert>
+	
+<!-- 	박스오피스 리스트 가져오기 -->
+	<select id="getBoxOfficeList"
+			parameterType="Search"
+			resultMap="movieSelectMap">
+	
+		SELECT * 
+		FROM (	SELECT inner_table.*,  ROWNUM AS row_seq 
+				FROM (
+					<include refid="select-BoxOffice" />
+													) inner_table 
+				<where>
+				ROWNUM <![CDATA[<=]]> #{endRowNum} 
+				</where> )
+		<where>
+		row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+		</where> 
+	
+	</select>
+	
+<!-- 	totalCnt for 박스오피스 리스트 가져오기  -->
+	<select id="getTotalCntBoxOffice"
+			parameterType="Search"
+			resultType="int">
+			
+		SELECT COUNT(*)
+	    FROM ( 
+			<include refid="select-BoxOffice"/>
+		 ) countTable
+	</select>
+	
+	
+<!-- 회원의 선호장르에 따른 영화 추천 ___ 선호장르가 있는 경우-->
+	<select id="getPreferMovie"
+			parameterType="Map"
+			resultMap="movieSelectMap">
+			
+			
+		SELECT 
+		o.movie_no, o.poster, o.movie_title, o.movie_rating, o.star_rate, NVL2(c.wish_no, '1', '0') wish_user_flag
+		FROM(
+			SELECT m.movie_no, m.poster, m.movie_title, m.movie_rating, t.cnt, s.star_rate, NVL(m.onBoxOffice_flag, 0)
+			FROM(
+					SELECT movie_no, COUNT(*) cnt
+					FROM MOVIE_GENRE
+					<where>
+					<foreach collection="list" item="user_genre" open="(" close=")" separator="or">
+						genre = #{user_genre}
+					</foreach>
+					</where>
+					GROUP BY MOVIE_NO						) t,
+					(
+					SELECT 
+					MOVIE_NO, AVG(star_rate) star_rate
+					FROM STAR_RATING
+					GROUP BY MOVIE_NO					) s, movie m
+					WHERE m.movie_no = t.movie_no
+						AND m.MOVIE_NO = s.movie_no
+						AND NVL(m.onBoxOffice_flag, 0) = '1'
+					ORDER BY t.cnt DESC , s.star_rate DESC						) o,
+			(
+			SELECT MOVIE_NO, COUNT(wish_no) wish_no
+			FROM WISH 
+			WHERE USER_NO = #{userNo:NUMERIC}
+			GROUP BY MOVIE_NO
+			) c
+		WHERE ROWNUM = 1	
+			
+	</select>
+	
+	
+<!-- 회원의 선호장르에 따른 영화 추천 ___ 선호장르가 없는 경우... 평점으로만..-->
+	<select id="getPreferMovieWithoutGenre"
+			resultMap="movieSelectMap">
+		
+		SELECT 
+		t.movie_no, t.poster, t.movie_title, t.movie_rating, t.STAR_RATE
+		FROM(	SELECT m.movie_no, m.poster, m.movie_title, m.movie_rating, AVG(s.STAR_RATE) STAR_RATE
+				FROM MOVIE m, STAR_RATING s
+				WHERE m.movie_no = s.MOVIE_NO(+)
+				AND	NVL(m.onBoxOffice_flag, 0) = 1 
+				GROUP BY m.MOVIE_NO, m.movie_no, m.poster, m.movie_title, m.movie_rating
+				ORDER BY AVG(s.STAR_RATE) DESC, m.MOVIE_NO DESC 
+				) t
+		WHERE ROWNUM = 1
+	
+	</select>
+	
+	<!-- 보고싶어요 추가 -->
+	<insert id="addWish"
+			parameterType="WishStarRating">
+		INSERT
+		INTO WISH
+		VALUES(seq_wish_wish_no.nextval, 
+				#{movieNo}, 
+				#{userNo}, 
+				SYSDATE)	
+	</insert>	
+	
+	<!-- 보고싶어요 삭제 -->
+	<delete id="deleteWish"
+			parameterType="WishStarRating">
+		DELETE 
+		FROM WISH
+		WHERE MOVIE_NO = #{movieNo}  
+			AND USER_NO = #{userNo}
+	</delete>
+
+	<!-- 해당 영화의 보고싶어요 갯수 조회 -->
+	<select id="getWishCnt"
+			parameterType="int"
+			resultType="int">
+			<!-- resultMap="movieSelectMap"> -->
+			
+		SELECT COUNT(*)
+		FROM WISH 
+		WHERE MOVIE_NO = #{value}
+		GROUP BY MOVIE_NO	
+			
+	</select>
+
+	<!-- 해당 회원이 보고싶어요 누른 영화의 목록 조회 -->
+	<select id="getWishMovieList"
+			parameterType="map"
+			resultMap="movieSelectMap">
+		
+		SELECT * 
+		FROM (	SELECT inner_table.*,  ROWNUM AS row_seq 
+				FROM (
+					<include refid="select-wishMovies" />
+													) inner_table 
+				<where>
+				ROWNUM <![CDATA[<=]]> #{search.endRowNum} 
+				</where> )
+		<where>
+		row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+		</where> 
+	
+	</select>
+	
+<!-- 	totalCnt for 해당 회원이 보고싶어요 누른 영화의 목록 조회  -->
+	<select id="getTotalCntWish"
+			parameterType="Search"
+			resultType="int">
+			
+		SELECT COUNT(*)
+	    FROM ( 
+			<include refid="select-wishMovies"/>
+		 ) countTable
+	</select>
+	
+<!-- 	특정 영화에 대해 별점 추가하기 -->
+	<insert id="addStarRating"
+			parameterType="WishStarRating">
+		INSERT
+		INTO STAR_RATING
+		VALUES(seq_star_rating_star_rating_no.nextval, #{movieNo}, #{userNo}, #{starByUser}, SYSDATE)
+	</insert>
+
+<!-- 	별점 업데이트하기  in updateStarRating -->
+	<update id="updateStarRating"
+			parameterType="WishStarRating">
+		UPDATE
+		STAR_RATING
+		SET	STAR_RATE = #{starByUser:NUMERIC}
+		WHERE MOVIE_NO = #{movieNo}
+			AND USER_NO = #{userNo}
+	</update>
+	
+<!-- 	별점 삭제하기 in updateStarRating starRate가 0일 경우.. -->
+	<delete id="deleteStarRating"
+			parameterType="WishStarRating">
+		DELETE 
+		FROM STAR_RATING
+		WHERE MOVIE_NO = #{movieNo}  
+			AND USER_NO = #{userNo}
+	</delete>
+	
+<!-- 	해당 유저가 특정 영화에 대해 내린 평점  -->
+	<select id="getStarByUserNo"
+			parameterType="WishStarRating"
+			resultMap="wishStarRatingMap">
+		SELECT
+		STAR_RATING_NO ,MOVIE_NO, USER_NO, STAR_RATE, RATE_DATE
+		FROM STAR_RATING
+		WHERE MOVIE_NO = #{movieNo}
+			AND USER_NO = #{userNo}
+	
+	</select>
+	
+	<select id="checkExistanceMovieDB"
+			parameterType="Map"
+			resultType="int">
+		SELECT 
+		COUNT(*)
+		FROM MOVIE
+		WHERE REPLACE(movie_title, ' ', '') = REPLACE(#{movieTitleInput}, ' ', '')
+			AND RELEASE_DATE = #{dateAfterFormat}
+	</select>
+	
+	<update id="updateReleasedMovie">
+		UPDATE
+		MOVIE 
+		SET ONBOXOFFICE_FLAG = 1
+		WHERE RELEASE_DATE <![CDATA[ <= ]]> SYSDATE
+	</update>
+
+	
+	<select id="getAllofMovieTitle"
+			resultType="String">
+		SELECT
+		MOVIE_TITLE
+		FROM MOVIE
+	</select>
+
+
+</mapper>

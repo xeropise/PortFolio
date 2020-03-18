@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="BoardMapper">
+
+	<resultMap type="Article" id="articleSelectMap">
+		<result property="articleNo"					column="article_no"				jdbcType="NUMERIC"/>
+		<result property="userId"						column="user_id"				jdbcType="VARCHAR"/>
+		<result property="userNo"						column="user_no"				jdbcType="NUMERIC"/>
+		<result property="articleType"					column="article_type"			jdbcType="NUMERIC"/>
+		<result property="category"						column="category"				jdbcType="NUMERIC"/>
+		<result property="articleStatus"				column="article_status"			jdbcType="NUMERIC"/>
+		<result property="articleTitle"					column="article_title"			jdbcType="VARCHAR"/>
+		<result property="content"						column="article_content"		jdbcType="VARCHAR"/>
+		<result property="files"						column="FILE_NAME"				jdbcType="VARCHAR"/>
+		<result property="articleDate"					column="article_date"			jdbcType="TIMESTAMP"/>
+		<result property="viewCount"					column="view_count"				jdbcType="NUMERIC"/>
+		<result property="blindStatus" 					column="blind_flag"				jdbcType="NUMERIC"/>
+		<result property="blindReason" 					column="blind_reason"			jdbcType="NUMERIC"/>
+		<result property="blindDate" 					column="blind_date"				jdbcType="TIMESTAMP"/>
+		<result property="deleteDate" 					column="delete_date"			jdbcType="TIMESTAMP"/>
+		<result property="supArticleNo" 				column="sup_art_no"				jdbcType="NUMERIC"/>
+		<result property="qnaStatus" 					column="qna_status"				jdbcType="NUMERIC"/>
+
+	</resultMap>
+	
+
+	<resultMap type="Article" id="reply">
+		<result property="articleNo" 					column="supNo"				jdbcType="NUMERIC"/>
+		<result property="replyNo" 						column="reNo"				jdbcType="NUMERIC"/>
+		<result property="articleTitle" 				column="reTitle"				jdbcType="VARCHAR"/>
+		<result property="content" 						column="reContent"				jdbcType="VARCHAR"/>
+		<result property="articleDate" 					column="reDate"				jdbcType="TIMESTAMP"/>
+		<result property="supArticleNo" 				column="reSup"				jdbcType="NUMERIC"/>
+	</resultMap>
+
+
+	<resultMap type="Comment" id="cmtSelectMap">
+		<result property="commentNo"				column="cmt_no"				jdbcType="NUMERIC"/>
+		<result property="commentType"				column="cmt_type"			jdbcType="NUMERIC"/>
+		<result property="userId"					column="user_id"			jdbcType="VARCHAR"/>
+		<result property="userNo"						column="user_no"				jdbcType="NUMERIC"/>
+		<result property="supCommentNo"				column="sup_com_no"			jdbcType="NUMERIC"/>
+		<result property="movieNo"					column="movie_no"			jdbcType="NUMERIC"/>
+		<result property="articleNo"				column="article_no"			jdbcType="NUMERIC"/>
+		<result property="commentContent"			column="cmt_content"		jdbcType="VARCHAR"/>
+		<result property="commentDate"				column="cmt_date"			jdbcType="TIMESTAMP"/>
+		<result property="blindStatus"				column="blind_flag"			jdbcType="NUMERIC"/>
+		<result property="movieTitle"				column="movie_title"			jdbcType="VARCHAR"/>
+	</resultMap>
+
+
+
+	<resultMap type="Like" id="likeSelectMap">
+		<result property="likeNo"					column="like_no"			jdbcType="NUMERIC"/>
+		<result property="userId"					column="user_id"			jdbcType="VARCHAR"/>
+		<result property="userNo"						column="user_no"				jdbcType="NUMERIC"/>
+		<result property="articleNo"				column="article_no"			jdbcType="NUMERIC"/>
+		<result property="commentNo"				column="cmt_no"				jdbcType="NUMERIC"/>
+	</resultMap>
+	
+<!-- 	글 추가하기 -->
+	<insert id="addArticle" 	parameterType="Article">
+		<selectKey resultType="int" keyProperty="articleNo" order="BEFORE">
+		SELECT seq_article_article_no.nextval FROM dual
+		</selectKey>
+		INSERT INTO article
+				(article_no, article_status, article_type, category, user_id,  sup_art_no,
+				 article_title, article_content, article_date, qna_status, view_count)
+		VALUES( #{articleNo}, 
+				#{articleStatus:NUMERIC},
+				#{articleType:NUMERIC},
+				#{category:NUMERIC},
+				#{userId:VARCHAR},
+				<if test="supArticleNo == 0">null,</if>
+				<if test="supArticleNo != 0">#{supArticleNo:NUMERIC},</if>
+				#{articleTitle:VARCHAR},
+				#{content:VARCHAR},
+				SYSDATE,
+				#{qnaStatus:NUMERIC},
+				0
+							)
+	</insert>
+	
+	
+<!-- 게시글 관리번호로 게시글 찾기 -->	
+	<select id="getArticle" parameterType="int" resultMap="articleSelectMap">
+		SELECT 
+		*
+		FROM article 
+		WHERE 
+		article_no = #{value}
+	</select>
+	
+<!-- 답변글 가져오기 -->	
+	<select id="getReArticle" parameterType="int" resultMap="reply">
+		SELECT 
+		 a1.ARTICLE_NO supNo,  a2.ARTICLE_NO reNo, a2.ARTICLE_TITLE reTitle, a2.ARTICLE_CONTENT reContent, 
+		 a2.ARTICLE_DATE reDate, a2.SUP_ART_NO reSup 
+		FROM ARTICLE a1, ARTICLE a2 
+		WHERE 
+		a1.ARTICLE_NO = a2.SUP_ART_NO
+		AND
+		a1.ARTICLE_NO = #{value}
+	</select>
+
+<!-- 게시글 목록 조회 -->	
+	<select id="getArticleList" parameterType="Search" resultMap="articleSelectMap" >
+		SELECT
+		*
+		FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+  				FROM (	
+  					<include refid="article_srch"/>	
+  					) inner_table
+				WHERE ROWNUM &lt;= #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+		ORDER BY article_date DESC
+		
+	</select>
+	
+<!-- 게시글 업데이트 -->
+	<update id="updateArticle">
+		UPDATE article
+		<set> 
+		 article_status		=		#{articleStatus:NUMERIC},
+		 article_type		=		#{articleType:NUMERIC},
+		 category			=		#{category:NUMERIC},
+		 article_title		=		#{articleTitle:VARCHAR},
+		 article_content	=		#{content:VARCHAR},
+		 article_date 		=		SYSDATE,
+		 qna_status			=		#{qnaStatus:NUMERIC}
+		</set>
+		WHERE 
+		 article_no = #{articleNo}
+	</update>	
+	
+<!-- 게시글 삭제하기 -->	
+	<update id="deleteArticle" parameterType="int">
+		UPDATE 
+		 article
+		SET
+		 article_status = 1
+		WHERE 
+		 article_no = #{value}
+	</update>
+
+
+<!-- 댓글 /한줄평 추가하기 -->	
+	<insert id="addComment" parameterType="Comment">
+	INSERT INTO commentt
+		   (cmt_no, cmt_type, user_id, SUP_CMT_NO, ARTICLE_NO, MOVIE_NO, CMT_CONTENT, CMT_DATE)
+	values (
+	 seq_commentt_cmt_no.nextval,
+	 #{commentType:NUMERIC},
+	 #{userId:VARCHAR},
+	 <if test="supCommentNo==0">null,</if>
+	 <if test="supCommentNo!=0">#{supCommentNo:NUMERIC},</if>
+	 <if test="articleNo==0">null,</if>
+	 <if test="articleNo!=0">#{articleNo:NUMERIC},</if> 
+	 <if test="movieNo==0">null,</if>
+	 <if test="movieNo!=0"> #{movieNo:NUMERIC},</if>
+	 #{commentContent:VARCHAR},
+	 SYSDATE
+	)
+	</insert>
+	
+
+<!-- 댓글 /한줄평 읽기 -->	
+	<select id="getCommentList" parameterType="Search" resultMap="cmtSelectMap">
+	SELECT 
+	 *
+	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+  				FROM (	
+  					<include refid="search-cmt"/>	
+  					) inner_table
+				WHERE ROWNUM &lt;= #{endRowNum} )
+	WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+	ORDER BY cmt_date DESC
+	</select>
+	
+	
+<!--  -->	
+	<sql id="search-cmt">	 
+		 SELECT
+		 	 c.cmt_no, c.cmt_type, c.user_id, c.sup_cmt_no, c.article_no,
+	 		 c.movie_no, c.cmt_content, c.cmt_date, c.cmt_count, c.blind_flag, c.blind_reason, c.blind_date
+		 <if test="commentType != null and commentType ==3 ">
+		 ,m.movie_title movie_title
+		 </if>
+		 FROM commentt c
+		 <if test="commentType != null and commentType ==3 ">
+		 ,movie m
+		 </if>
+		 
+		<where>
+		 <if test="commentType!=null">
+		 	<if test="commentType==0 ">   
+				c.cmt_type = 0 
+				AND c.article_no = #{parent}
+		   </if>
+			<if test="commentType==1 "> 
+				c.cmt_type = 1
+				AND c.movie_no = #{parent}
+			</if>
+			<if test="commentType==2 "> 
+				c.cmt_type = 2 
+				AND c.movie_no = #{movieNo}
+			</if>
+			<if test="commentType==3 "> <!-- 임시 작업(한줄평 개수) -->
+				c.cmt_type = 2 
+				AND c.user_id = #{userId}
+				AND c.movie_no = m.movie_no
+			</if>
+		 </if>
+		 
+		
+		</where>
+		ORDER BY cmt_date DESC
+ </sql>
+
+
+
+<!-- SQL : 댓글 total  count -->
+	 <select  id="getCmtCount"  parameterType="com.mmm.common.Search"	 resultType="int">
+	  		SELECT COUNT(*)
+	  		FROM(	
+			<include refid="search-cmt"/>	
+		 	) countTable	
+	 </select>	
+	
+	
+	
+<!-- 댓글/ 한줄평 수정하기 -->	
+	<update id="updateComment" parameterType="Comment">
+	UPDATE commentt
+		<set> 
+		 cmt_content		=		#{commentContent:VARCHAR},
+		 cmt_date			=		SYSDATE
+		</set>
+		<where>
+		 cmt_no = #{commentNo}
+		</where>
+	</update>
+	
+<!-- 댓글/한줄평 삭제하기 -->
+	<update id="deleteComment" parameterType="int">
+		UPDATE 
+		 commentt
+		SET
+		 article_status = 1
+		 <where>
+		  cmt_no = #{value}
+	 	</where>
+	</update>	
+	
+<!-- 게시글/ 댓글 좋아요 -->
+	<insert id="addLike" parameterType="Like">
+	INSERT 
+	INTO likee (like_no, user_id, article_no, cmt_no)
+	VALUES(
+	seq_likee_like_no.nextval, 
+	#{userId}, 
+	#{userNo}, 
+	<if test="articleNo==0">null,</if> 
+	<if test="articleNo!=0">#{articleNo}</if>
+	<if test="commentNo==0">null</if> 
+	<if test="commentNo!=0">#{commentNo}</if> 
+	)
+	</insert>
+	
+<!-- 좋아요 취소 -->
+
+	<delete id="deleteLike"	parameterType="Like">
+		DELETE 
+		FROM likee
+		<where>  
+		 user_id = #{userId}
+		<if test="commentNo==null &amp;&amp; articleNo!=null"> AND article_no = #{articleNo}</if>   
+		<if test="commentNo!=null &amp;&amp; articleNo==null"> AND cmt_no = #{commentNo}</if>   
+		</where>
+	</delete>	  
+	
+	
+<!-- article 신고하기 -->	
+	
+	<update id="articleBlind" parameterType="Blind">
+		UPDATE article
+		<set>
+		BLIND_FLAG = 1,
+		BLIND_DATE = SYSDATE,
+		BLIND_REASON = #{blindReason}
+		</set>
+		<where>
+		ARTICLE_NO = #{articleNo}
+		</where>
+	</update>
+
+<!-- 한줄평, 댓글 신고하기 -->	
+
+	<update id="commentBlind" parameterType="Blind">
+		UPDATE commentt
+		<set>
+		BLIND_FLAG = 1,
+		BLIND_DATE = SYSDATE,
+		BLIND_REASON = #{blindReason}
+		</set>
+		<where>
+		CMT_NO = #{commentNo}
+		</where>
+	</update>
+
+<!-- 아티클 블라인드 리스트 조회 -->
+
+	<select id="getArtBlindList" parameterType="Search" resultMap="articleSelectMap"> 
+		SELECT 
+		 article_no, article_status, article_type, category, user_id, sup_art_no, article_title, 
+		 article_content, article_date, file_name, view_count, blind_reason, blind_date, delete_date, qna_status
+		FROM article
+		where blind_flag = 1
+	</select>
+	
+<!-- 커맨트/한줄평 블라인드 -->	
+	<select id="getCmtBlindList" parameterType="Search" resultMap="cmtSelectMap"> 
+		SELECT 
+		 cmt_no, cmt_type, user_id, sup_cmt_no, article_no, 
+	 	 movie_no, cmt_content, cmt_date, cmt_count, blind_flag, blind_reason, blind_date
+		FROM commentt
+		where blind_flag = 1
+	</select>
+
+
+<!-- 게시글 검색 -->
+
+	  <sql id="article_srch">	 
+		SELECT 
+		*
+		FROM article 
+			  <where>
+				<if test="articleType !=null"> 
+					<if test="articleType==1 "> 
+						article_type = 1 </if>
+					<if test="articleType==2 "> 
+						article_type = 2 </if>
+					<if test="articleType==3 "> 
+						article_type = 3 </if>
+					<if test="articleType==4 "> 
+						article_type = 4 </if>
+					<if test="articleType==5"> 
+						article_type = 5 </if>
+					<if test="articleType==6 "> 
+						article_type = 6</if>
+				</if>
+			
+				<if test="category!=null">
+					<if test="category==1 ">
+					    AND	category = 1 </if>
+					<if test="category==2 ">
+					    AND	category = 2 </if>
+					<if test="category==3 ">
+					    AND	category = 3 </if>
+					<if test="category==4 ">
+					    AND	category = 4 </if>
+					<if test="category==5 ">
+					    AND	category = 5 </if>
+					<if test="category==6 ">
+					    AND	category = 6 </if>
+				</if>
+				
+				<if test="userId!=null">
+						AND article_status = 0
+						AND user_id =#{userId}
+				</if>
+				
+				<if test="searchCondition!= null">
+				<if test="searchCondition == 2 and searchKeyword =='' ">
+				</if>
+					<if test="searchCondition == 0 and searchKeyword =='' ">
+					AND	qna_status = 0
+				</if>
+					<if test="searchCondition == 1 and searchKeyword =='' ">
+					AND	qna_status = 1
+				</if>
+				<if test="searchCondition == 0 and searchKeyword !='' ">
+				AND	qna_status = 0
+				AND	article_title  like '%'||#{searchKeyword}||'%'
+				</if>
+				
+				<if test="searchCondition == 1 and searchKeyword !='' ">
+				AND	qna_status = 1
+				AND article_title like '%'||#{searchKeyword}||'%'
+				</if>
+				<if test="searchCondition == 2 and searchKeyword !='' ">
+				AND article_title like '%'||#{searchKeyword}||'%'
+				</if>
+				
+				
+			</if>	
+				
+			</where>
+	 </sql>	
+	 
+<!-- 게시글 count -->
+
+	 <select  id="article_count"  parameterType="com.mmm.common.Search"	 resultType="int">
+	  		SELECT COUNT(*)
+	  		FROM(	
+			<include refid="article_srch"/>	
+		 	) countTable	
+	 </select>	 
+	 
+	 
+<!-- 조회수 증가시키는 -->
+	<update id="updateViewCnt" parameterType="int" >
+	 	UPDATE article
+	 	set view_count = view_count +1
+	 	where article_no = #{value}
+	</update>	 
+	 
+</mapper>

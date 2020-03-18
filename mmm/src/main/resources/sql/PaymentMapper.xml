@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="PaymentMapper">
+
+	<resultMap type="Payment" id="paymentSelectMap">
+		<result property="paymentNo" 			column="payment_no" 				jdbcType="NUMERIC"/>
+		<result property="userNo" 				column="user_no" 					jdbcType="NUMERIC"/>
+		<result property="impUid" 				column="impUid" 					jdbcType="VARCHAR"/>
+		<result property="payStatus" 			column="pay_status" 				jdbcType="NUMERIC"/>
+		<result property="payDate" 				column="pay_date" 					jdbcType="TIMESTAMP"/>
+		<result property="cancelDate" 			column="cancel_date" 				jdbcType="TIMESTAMP"/>
+		<result property="cash" 				column="cash" 						jdbcType="NUMERIC"/>
+		<result property="usingPoint" 			column="using_point" 				jdbcType="NUMERIC"/>
+		<result property="savingPoint" 			column="saving_point" 				jdbcType="NUMERIC"/>
+		<result property="payMethod" 			column="pay_method" 				jdbcType="NUMERIC"/>
+		<result property="totalPrice" 			column="pay_price" 					jdbcType="NUMERIC"/>
+		<result property="usingVoucherFirst" 	column="using_first_prod_pin_no" 	jdbcType="NUMERIC"/>
+		<result property="usingVoucherSecond" 	column="using_second_prod_pin_no" 	jdbcType="NUMERIC"/>
+		<result property="usingVoucherThird" 	column="using_third_prod_pin_no" 	jdbcType="NUMERIC"/>
+		<result property="payObjectFlag"		column="pay_Object_Flag"			jdbcType="NUMERIC"/>
+		
+		<association property="ticketing" 		javaType="Ticketing">
+			<id property="ticketingNo"	column="ticketing_no" 		jdbcType="VARCHAR" />
+			<result property="movieName" 		column="movie_Name" 		jdbcType="VARCHAR" />
+	<!-- 	<result property="movieNo" column="movie_no" jdbcType="VARCHAR" />  --> 
+			<result property="theaterName" 		column="theater_name" 		jdbcType="VARCHAR" />
+			<result property="dateTimeNo" 		column="date_time_no" 		jdbcType="VARCHAR" />
+			<result property="audienceType" 	column="audience_type" 		jdbcType="VARCHAR" />
+			<result property="seatType" 		column="seat_type" 			jdbcType="VARCHAR" />
+			<result property="seatNo"	 		column="seat_no" 			jdbcType="VARCHAR" />
+			<result property="headCount" 		column="head_count" 		jdbcType="INTEGER" />
+			<result property="ticketingPrice" 	column="ticketing_price" 	jdbcType="INTEGER" />
+			<result property="ticketingPinNo" 	column="ticketing_pin_no" 	jdbcType="VARCHAR" />
+			<result property="ticketerPhone" 	column="ticketer_phone" 	jdbcType="VARCHAR" />
+			<result property="ticketingDate" 	column="ticketing_date" 	jdbcType="TIMESTAMP" />
+			<result property="cancelDate" 		column="cancel_date" 		jdbcType="TIMESTAMP" />
+			<result property="ticketingStatus" 	column="ticketing_status" 	jdbcType="INTEGER" />
+		</association>
+		
+		<association property="purchase" 		javaType="Purchase">
+			<id property="purchaseNo"					column="purchase_no" 		jdbcType="INTEGER" />
+			<result property="purchaseUser.userNo"		column="purchase_user" 		jdbcType="INTEGER"  />
+			<result property="purchaseProd.prodNo" 		column="purchase_prod" 		jdbcType="INTEGER"/>
+			<result property="purchaseStatus" 			column="purchase_status" 	jdbcType="INTEGER"  />
+			<result property="purchasePrice" 			column="purchase_price" 	jdbcType="INTEGER"  />
+			<result property="purchaseDate" 			column="purchase_date" 		jdbcType="DATE"  />
+			<result property="rcPhone" 					column="rc_phone" 			jdbcType="NUMERIC"  />
+			<result property="rcName" 					column="rc_Name" 			jdbcType="VARCHAR"  />
+			<result property="message" 					column="message" 			jdbcType="VARCHAR"  />
+			<result property="purchaseInven.prodPinNo" 	column="purchase_Inven" 	jdbcType="NUMERIC"  />
+		</association>
+		
+	</resultMap>
+	
+
+<!-- 	구매내역 조회 _회원용..  sql 모듈-->
+	<sql id="select-payList">
+		SELECT
+		PAYMENT_NO, USER_NO, impUid, TICKETING_NO, PURCHASE_NO, PAY_STATUS, PAY_METHOD,
+		PAY_PRICE, PAY_DATE, CANCEL_DATE, pay_Object_Flag, CASH, USING_POINT, SAVING_POINT,
+		USING_FIRST_PROD_PIN_NO, USING_SECOND_PROD_PIN_NO, USING_THIRD_PROD_PIN_NO
+		FROM PAYMENT
+		<where>
+			USER_NO = #{userNo}
+			
+			<if test="searchCondition != null">
+				AND PAY_DATE >= (SYSDATE - 	<if test="searchCondition == 0">7</if>
+											<if test="searchCondition == 1">30</if>
+											<if test="searchCondition == 2">90</if>
+					 										)
+			</if>
+		</where>
+		ORDER BY PAY_DATE DESC
+	</sql>
+	
+<!-- 	구매내역 조회 관리자용 -->
+	<sql id="select-payList-Ad">
+		SELECT
+		PAYMENT_NO, USER_NO, impUid, TICKETING_NO, PURCHASE_NO, PAY_STATUS, PAY_METHOD,
+		PAY_PRICE, PAY_DATE, CANCEL_DATE, pay_Object_Flag, CASH, USING_POINT, SAVING_POINT,
+		USING_FIRST_PROD_PIN_NO, USING_SECOND_PROD_PIN_NO, USING_THIRD_PROD_PIN_NO
+		FROM PAYMENT
+		<where>
+			<if test="userNo != 0">
+				USER_NO = #{userNo:NUMERIC}</if>
+			<if test="searchCondition != null">
+				AND PAY_DATE >= (SYSDATE - 	<if test="searchCondition == 1">7</if>
+											<if test="searchCondition == 2">30</if>
+											<if test="searchCondition == 3">90</if>
+					 										)						</if>
+					 										
+<!-- 			결제냐 결제 취소냐 -->
+			<if test="viewCondition != null">
+				AND Pay_STATUS = #{viewCondition:VARCHAR}
+			</if>
+			
+<!-- 			예매한거냐 구매한거냐 둘다한거냐 -->
+			<if test="payObjectFlag != null">
+				AND pay_Object_Flag = #{payObjectFlag:NUMERIC}
+			</if>
+		</where>
+		ORDER BY PAY_DATE DESC
+	</sql>
+		
+		
+<!-- 	구매하기 -->
+	<insert id="addPayment"
+			parameterType="Payment">
+		INSERT INTO PAYMENT
+		VALUES(seq_payment_payment_no.nextval, 
+				#{userNo}, 
+				#{impUid}, 
+				<if test="ticketing.ticketingPrice != 0">
+					seq_ticketing_ticketing_no.currval, 
+				</if>
+				<if test="ticketing.ticketingPrice == 0">
+					null, 
+				</if>
+				<if test="purchase.purchasePrice != 0">
+					seq_purchase_purchase_no.currval, 
+				</if>
+				<if test="purchase.purchasePrice == 0">
+					null, 
+				</if>
+				#{payStatus:NUMERIC},  
+				#{payMethod:NUMERIC}, 
+				#{totalPrice}, 
+				SYSDATE,
+<!-- 				cancelDate  -->
+				NULL,
+				#{payObjectFlag:NUMERIC}, 
+				#{cash:NUMERIC}, 
+				#{usingPoint:NUMERIC}, 
+				#{savingPoint:NUMERIC},
+				#{usingVoucherFirst:NUMERIC},
+				#{usingVoucherSecond:NUMERIC},
+				#{usingVoucherThird:NUMERIC}
+				)
+	</insert>
+	
+	
+<!-- 	결제 리스트 조회  with  페이징 처리-->
+	<select id="getPaymentList"
+			parameterType="Search"
+			resultMap="paymentSelectMap">
+	
+		SELECT * 
+		FROM (	SELECT inner_table.*,  ROWNUM AS row_seq 
+				FROM (
+					<include refid="select-payList" />
+													) inner_table 
+				<where>
+				ROWNUM <![CDATA[<=]]> #{endRowNum} 
+				</where> )
+		<where>
+		row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+		</where> 
+	</select>
+	
+<!-- 	totalCnt for 결제 리스트 조회   -->
+	<select id="getTotalCntPaymentList"
+			parameterType="Search"
+			resultType="int">
+			
+		SELECT COUNT(*)
+	    FROM ( 
+			<include refid="select-payList"/>
+		 ) countTable
+	</select>
+	
+<!-- 	결제 상세조회...  payment 관리번호로..  -->
+	<select id="getPayment"
+			parameterType="int"
+			resultMap="paymentSelectMap">
+		SELECT
+		PAYMENT_NO, USER_NO, TICKETING_NO, PURCHASE_NO, PAY_STATUS, PAY_METHOD,
+		PAY_PRICE, PAY_DATE, CANCEL_DATE, CASH, USING_POINT, SAVING_POINT,
+		USING_FIRST_PROD_PIN_NO, USING_SECOND_PROD_PIN_NO, USING_THIRD_PROD_PIN_NO. impUid
+		FROM PAYMENT
+		WHERE PAYMENT_NO = #{paymentNo}
+	</select>
+	
+<!-- 	결제 상세조회...  ticketing 관리번호로..  -->
+	<select id="getPaymentbyTicketingNo"
+			parameterType="int"
+			resultMap="paymentSelectMap">
+		SELECT
+		PAYMENT_NO, USER_NO, TICKETING_NO, PURCHASE_NO, PAY_STATUS, PAY_METHOD,
+		PAY_PRICE, PAY_DATE, CANCEL_DATE, CASH, USING_POINT, SAVING_POINT,
+		USING_FIRST_PROD_PIN_NO, USING_SECOND_PROD_PIN_NO, USING_THIRD_PROD_PIN_NO, impUid
+		FROM PAYMENT
+		WHERE Ticketing_No = #{ticketingNo}
+	</select>
+	
+<!-- 	결제 상세조회...  purchase 관리번호로..  -->
+	<select id="getPaymentbyPurchaseNo"
+			parameterType="int"
+			resultMap="paymentSelectMap">
+		SELECT
+		PAYMENT_NO, USER_NO, TICKETING_NO, PURCHASE_NO, PAY_STATUS, PAY_METHOD,
+		PAY_PRICE, PAY_DATE, CANCEL_DATE, CASH, USING_POINT, SAVING_POINT,
+		USING_FIRST_PROD_PIN_NO, USING_SECOND_PROD_PIN_NO, USING_THIRD_PROD_PIN_NO, impUid
+		FROM PAYMENT
+		WHERE purchase_no = #{purchaseNo}
+	</select>
+	
+<!-- 	결제취소.. 플래그 변경 -->
+	<update id="cancelPayment"	
+			parameterType="Payment">
+		UPDATE PAYMENT
+		<set>
+		   PAY_STATUS = 1,
+		   cancel_date = SYSDATE
+		</set>
+		WHERE PAYMENT_NO = #{paymentNo}
+	</update>
+	
+<!-- 	관리자용 결제내역조회  with  페이징 처리-->
+	<select id="getPaymentListAd"
+			parameterType="Payment"
+			resultMap="paymentSelectMap">
+			
+		SELECT * 
+		FROM (	SELECT inner_table.*,  ROWNUM AS row_seq 
+				FROM (
+					<include refid="select-payList-Ad" />
+													) inner_table 
+				<where>
+				ROWNUM <![CDATA[<=]]> #{endRowNum} 
+				</where> )
+		<where>
+		row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+		</where>
+			
+	</select>
+	
+	
+<!-- 	totalCnt for 관리자용 결제내역조회   -->
+	<select id="getTotalCntPaymentListAd"
+			parameterType="Search"
+			resultType="int">
+			
+		SELECT COUNT(*)
+	    FROM ( 
+			<include refid="select-payList-Ad"/>
+		 ) countTable
+	</select>
+	
+
+</mapper>

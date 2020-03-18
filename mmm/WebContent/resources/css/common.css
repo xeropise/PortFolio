@@ -1,0 +1,66 @@
+.btn-yellow-cs {
+	background-color: #fee50e!important;
+    color: #212529;
+    border-color: #fcfaf5;
+}
+
+.btn-yellow-cs:hover {
+    color: #f8f9fa;
+    background-color: #e0a800;
+    border-color: #040404;
+}
+
+.bg-yellow-cs {
+    background-color: #fee50e!important;
+    color: #222;
+}
+
+.bg-dark-cs {
+    background-color: #282828!important;
+    color: #f6fff4;
+}
+
+.font-yellow-cs{
+	color: #fee50e!important;
+}
+
+.font-bold-cs{
+	font-weight : bold;
+}
+.font-bolder-cs{
+	font-weight : bolder;
+}
+
+container.point, th, td, input, select, textarea, button {
+    font-size: 13px;
+    line-height: 1.5;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #222;
+    letter-spacing : normal;
+}
+
+.btn-outline-light:hover {
+    background-color: #ffe007;
+}
+
+.div-center-cs{
+	float: none;
+	margin: 0 auto;
+}
+/* 페이지네이션 */
+.page-item .active {
+    z-index: 3;
+    color: #fff;
+    background-color: #feca0e;
+    border-color: #feca0e;
+}
+.page-link {
+    position: relative;
+    display: block;
+    padding: .5rem .75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: #414548;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="DateTimeMapper">
+
+	<resultMap type="DateTime" id="dateTimeSelectMap">
+		<result property="dateTimeNo" 		column="date_time_no" 	jdbcType="VARCHAR" />
+		<result property="movieName" 		column="movie_Name" 	jdbcType="VARCHAR" />
+		<result property="poster"			column="poster"			jdbcType="VARCHAR" />
+		<result property="rating"			column="rating"			jdbcType="VARCHAR" />
+		<result property="franchise"		column="franchise"		jdbcType="VARCHAR" />
+		<result property="theaterName" 		column="theater_name" 	jdbcType="VARCHAR" />
+		<result property="screenName"       column="screen_name"	jdbcType="VARCHAR" />
+		<result property="screenDate" 		column="screen_date" 	jdbcType="TIMESTAMP" />
+		<result property="screenTime" 		column="screen_time" 	jdbcType="TIMESTAMP" />
+		<result property="remainingSeat" 	column="remaining_seat" jdbcType="INTEGER" />
+		<result property="selectedSeat" 	column="selected_Seat" 	jdbcType="VARCHAR" />
+	</resultMap>
+
+	<insert id="addDateTime" parameterType="DateTime">
+		insert into date_time
+		(date_time_no, movie_Name, poster, rating, franchise, theater_name, screen_name, screen_date, screen_time, remaining_seat, selected_Seat)
+		values 
+		(seq_date_time_date_time_no.NEXTVAL,
+		#{movieName:VARCHAR},
+		#{poster:VARCHAR},
+		#{rating:VARCHAR},
+		#{franchise:VARCHAR},
+		#{theaterName:VARCHAR},
+		#{screenName:VARCHAR}, 
+		#{screenDate:TIMESTAMP},
+		#{screenTime:TIMESTAMP}, 
+		DEFAULT,
+		NULL )
+	</insert>
+	
+	<!-- trim태그 사이에 다른 절이 삽입되는경우에, 다른 태그도 Overrides동작을 같이 받는다.. -->
+	<update id="updateDateTime" parameterType="DateTime">
+		UPDATE date_time
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="movieName !=null">movie_Name = #{movieName},</if>
+			<if test="poster !=null">poster = #{poster},</if>
+			<if test="rating !=null">rating = #{rating},</if>
+			<if test="franchise !=null">franchise = #{franchise},</if>
+			<if test="theaterName !=null">theater_name = #{theaterName},</if>
+			<if test="screenName !=null">screen_name =#{screenName},</if>
+			<if test="screenDate !=null">screen_date = #{screenDate},</if>
+			<if test="screenTime !=null">screen_time = #{screenTime},</if>
+			<if test="remainingSeat !=null">remaining_seat = #{remainingSeat},</if>
+			<if test="selectedSeat !=null">selected_Seat = #{selectedSeat},</if>
+		</trim>
+			<where>
+				date_time_no = #{dateTimeNo}
+			</where>
+
+	</update>
+	
+	<!-- https://m.blog.naver.com/PostView.nhn?blogId=cir213&logNo=221214715748&proxyReferer=https%3A%2F%2Fwww.google.co.kr%2F -->
+	<!-- 인자 값 2개 넘기기 -->
+	<update id="addTicketing" parameterType="Map">
+		UPDATE date_time
+			<trim prefix="SET" suffixOverrides=",">		
+				<if test="headCount !=null">remaining_seat	= remaining_seat-#{headCount},</if>
+				<if test="totalSeat !=null">selected_Seat = #{totalSeat},</if>
+			</trim>
+			
+			<where>
+				date_time_no = #{dateTimeNo}
+			</where>			
+	</update> 
+	
+	<update id="cancelTicketing" parameterType="Map">
+		UPDATE date_time
+			<trim prefix="SET" suffixOverrides=",">		
+				<if test="headCount !=null">remaining_seat	= remaining_seat+ #{headCount},</if>
+				<if test="totalSeat !=null">selected_Seat = #{totalSeat},</if>
+			</trim>
+			<where>
+				date_time_no = #{dateTimeNo}
+			</where>			
+	</update>
+	
+	<delete id="deleteDateTime" parameterType="int">
+		DELETE from date_time WHERE date_time_no = #{value}
+	
+	</delete>
+	
+
+	<select id="getDateTime" parameterType="String"
+		resultMap="dateTimeSelectMap">
+		select
+		*
+		from date_time 
+		WHERE 
+		date_time_no = #{value}
+	</select>
+	
+	<select id="getDateTimeByMovieName" parameterType="String"
+		resultMap="dateTimeSelectMap">
+		select
+		distinct poster, rating
+		from date_time 
+		WHERE 
+		movie_Name = replace(replace(#{value}, chr(10), ''), chr(13), '')
+	</select>
+	
+	<select id="getDateTimeList" parameterType="search" resultMap="dateTimeSelectMap">
+	<!-- <include refid="front" />  -->
+		SELECT *
+		FROM date_time 
+		<if test="searchCondition != null">
+			<if test="searchCondition==0">
+					WHERE movie_Name like '%'||#{movieName}||'%'
+			</if>
+			
+			<if test="searchCondition==1">
+					WHERE theater_name = #{theaterName}
+			</if>
+			
+			<if test="searchCondition==2">
+					WHERE movie_Name like '%'||#{movieName}||'%' AND theater_name like '%'||#{theaterName}||'%'
+			</if>
+		</if>
+		order by date_time_no DESC
+	</select>
+	<!-- 	<include refid="back" />  -->		
+<!-- 			
+	<sql id="front">
+  		SELECT * FROM (		SELECT inner_table. * ,  ROWNUM AS row_seq  	FROM (	
+  	</sql>
+  	
+  	 <sql id="back">
+  					) inner_table
+		WHERE ROWNUM <![CDATA[ <= ]]> #{currentPage}*#{pageSize} ) 
+		WHERE row_seq BETWEEN ( (#{currentPage}-1)*#{pageSize}+1) AND (#{currentPage}*#{pageSize})
+  	</sql>
+ -->  	  
+	<!-- 
+	 <select  id="getTotalCount"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(			SELECT A.*, B.tran_status_code, B.tran_no
+		FROM product A, transaction B
+		WHERE A.prod_no=B.prod_no(+) and B.tran_status_code IS NOT NULL
+		<if test="searchCondition != null">
+			<if test="searchCondition==0">
+					and A.PROD_NO like '%'||#{searchKeyword}||'%'
+			</if>
+			
+			<if test="searchCondition==1">
+					and A.PROD_NAME like '%'||#{searchKeyword}||'%'
+			</if>
+			
+			<if test="searchCondition==2">
+					and A.price like '%'||#{searchKeyword}||'%'
+			</if>
+		</if>
+		order by A.PROD_NO ) 	
+	 </select>	
+	 -->
+	 
+	 <select id="getMovieList" parameterType="Search" resultMap="dateTimeSelectMap">
+	 	SELECT distinct movie_name, poster, rating
+	 	from date_time
+			<trim prefix="where" suffixOverrides="and">
+				<if test="franchises !=null">franchise IN 
+				<foreach item="item" collection="franchises" index="index" open="(" separator="," close=")">
+			        #{item}
+			    </foreach> 
+    			and</if>
+				<if test="theaterNames !=null">theater_name IN 
+				<foreach item="item" collection="theaterNames" index="index" open="(" separator="," close=")">
+			        #{item}
+			    </foreach>				
+				 and</if>
+				<if test="screenDate !=null">to_char(screen_date, 'MM-DD') = to_char(#{screenDate}, 'MM-DD') and</if>
+			</trim>
+			order by movie_name
+	 </select>
+	 
+	 	 
+	 <select id="getFranchiseList" parameterType="Search" resultMap="dateTimeSelectMap">
+	 	SELECT distinct franchise
+	 	from date_time
+			<trim prefix="where" suffixOverrides="and">
+				<if test="movieName !=null">movie_name = #{movieName} and</if>
+				<if test="theaterName !=null">theater_name IN (#{theaterName}) and</if>
+				<if test="screenDate !=null">to_char(screen_date, 'MM-DD') = to_char(#{screenDate}, 'MM-DD') and</if>
+			</trim>	 
+	 		order by franchise
+	 </select>
+	 
+	 <select id="getTheaterList" parameterType="Search" resultMap="dateTimeSelectMap">
+	 	SELECT distinct theater_name
+	 	from date_time
+			<trim prefix="where" suffixOverrides="and">
+				<if test="franchises !=null">franchise IN 
+				<foreach item="item" collection="franchises" index="index" open="(" separator="," close=")">
+			        #{item}
+			    </foreach> 
+    			and</if>
+				<if test="movieName !=null">movie_name = #{movieName} and</if>
+				<if test="screenDate !=null">to_char(screen_date, 'MM-DD') = to_char(#{screenDate}, 'MM-DD') and</if>
+			</trim>
+			order by theater_name
+	 </select>
+	 
+	 <select id="getDateList" parameterType="Search" resultMap="dateTimeSelectMap">
+	 	SELECT distinct screen_date
+	 	from date_time
+			<trim prefix="where" suffixOverrides="and">
+				<if test="franchises !=null">franchise IN 
+				<foreach item="item" collection="franchises" index="index" open="(" separator="," close=")">
+			        #{item}
+			    </foreach> 
+    			and</if>
+				<if test="theaterNames !=null">theater_name IN 
+				<foreach item="item" collection="theaterNames" index="index" open="(" separator="," close=")">
+			        #{item}
+			    </foreach>				
+				 and</if>
+				<if test="movieName !=null">movie_name = #{movieName} and</if>
+			</trim>
+			order by screen_date asc
+	 </select>
+	
+	 <select id="getTimeList" parameterType="Search" resultMap="dateTimeSelectMap">
+	 	SELECT date_time_no, screen_name, screen_time, remaining_seat
+	 	from date_time
+			<trim prefix="where" suffixOverrides="and">
+				<if test="franchise !=null">franchise IN (#{franchise}) and</if>
+				<if test="theaterName !=null">theater_name IN (#{theaterName}) and</if>
+				<if test="movieName !=null">movie_name = #{movieName} and</if>
+				<if test="screenDate !=null">to_char(screen_date, 'MM-DD') = to_char(#{screenDate}, 'MM-DD') and</if>				
+			</trim>
+			order by date_time_no
+	 </select>
+	 
+	 <!-- 검증 필요 -->
+	 <select id="getSelectedSeat" parameterType="DateTime" resultMap="dateTimeSelectMap">
+	 	SELECT date_time_no, rating, poster, screen_Name,selected_Seat, remaining_seat
+	 	from date_time
+			<trim prefix="where" suffixOverrides="and">
+				<if test="dateTimeNo !=null">date_time_no = #{dateTimeNo} and</if>
+				<if test="franchise !=null">franchise = #{franchise} and</if>
+				<if test="theaterName !=null">theater_name = #{theaterName} and</if>
+				<if test="movieName !=null">movie_name = #{movieName} and</if>
+				<if test="screenDate !=null">to_char(screen_date, 'MM-DD') = to_char(#{screenDate}, 'MM-DD') and</if>
+				<if test="screenTime !=null">to_char(screen_time,  'hh24:mi') = to_char(#{screenTime}, 'hh24:mi') and</if>
+			</trim>
+	 </select>
+	 	 
+</mapper>

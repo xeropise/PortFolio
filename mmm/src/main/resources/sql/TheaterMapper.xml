@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="TheaterMapper">
+
+	<resultMap type="Theater" id="theaterSelectMap">
+		<result property="theaterNo" 	column="theater_no" 	jdbcType="VARCHAR" />
+		<result property="franchise" 	column="franchise" 	    jdbcType="VARCHAR" /> 
+		<result property="theaterName" 	column="theater_name"   jdbcType="VARCHAR" />
+		<result property="theaterPhone"	column="theater_Phone"	jdbcType="VARCHAR" />
+		<result property="positionX" 	column="position_X" 	jdbcType="VARCHAR" />
+		<result property="positionY" 	column="position_Y" 	jdbcType="VARCHAR" />
+		<result property="address" 		column="address"		jdbcType="VARCHAR" />
+		<result property="roadAddress"  column="road_Address"   jdbcType="VARCHAR" />
+		<result property="placeUrl"     column="place_Url"      jdbcType="VARCHAR" />
+		<result property="id"			column="id"				jdbcType="VARCHAR" />
+	</resultMap>
+
+	<insert id="addTheater" parameterType="Theater">
+		INSERT into theater 
+		(theater_no, franchise, theater_name, theater_Phone, 
+		position_X, position_Y, address, road_Address, place_Url ,id)
+		values 
+		(seq_theater_theater_no.NEXTVAL,
+		#{franchise:VARCHAR},
+		#{theaterName:VARCHAR},
+		#{theaterPhone:VARCHAR},
+		#{positionX:VARCHAR},
+		#{positionY:VARCHAR},
+		#{address:VARCHAR},
+		#{roadAddress:VARCHAR},
+		#{placeUrl:VARCHAR},
+		#{id:VARCHAR})
+	</insert>
+	
+	<!-- trim태그 사이에 다른 절이 삽입되는경우에, 다른 태그도 Overrides동작을 같이 받는다.. -->
+	<update id="updateTheater" parameterType="Theater">
+		UPDATE Theater
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="franchise !=null">franchise = #{franchise},</if>
+			<if test="theaterName !=null">theater_name = #{theaterName},</if>
+			<if test="theaterPhone !=null">theater_Phone = #{theaterPhone},</if>
+			<if test="positionX !=null">position_X = #{positionX},</if>
+			<if test="positionY !=null">position_Y = #{positionY},</if>
+			<if test="address !=null">address = #{address},</if>
+			<if test="roadAddress !=null">road_Address = #{roadAddress},</if>
+			<if test="placeUrl !=null">place_Url = #{placeUrl:VARCHAR},</if>
+			<if test="id !=null">id = #{id},</if>
+		</trim>
+			<where>
+				theater_no = #{theaterNo}
+			</where>
+
+	</update>
+	
+	<delete id="deleteTheater" parameterType="int">
+		DELETE from theater WHERE theater_no = #{theaterNo}
+	
+	</delete>
+	
+
+	<select id="getTheater" parameterType="String"
+		resultMap="theaterSelectMap">
+		select
+		*
+		from theater 
+		WHERE 
+		theater_no = #{value}
+	</select>
+	
+	<select id="getTheaterByName" parameterType="String"
+		resultMap="theaterSelectMap">
+		select
+		*
+		from theater 
+		WHERE 
+		theater_name = #{value}
+	</select>
+	
+	<select id="lastTheater" resultType="String">
+		SELECT LAST_NUMBER-1 
+		FROM USER_SEQUENCES 
+		WHERE SEQUENCE_NAME = 'SEQ_THEATER_THEATER_NO'
+		
+	</select>
+	
+	<select id="getTheaterList" parameterType="search" resultMap="theaterSelectMap">
+	<!-- <include refid="front" />  -->
+		SELECT *
+		FROM theater
+		<if test="searchCondition != null">
+			<if test="franchise != null">
+					WHERE franchise = #{franchise}
+			</if>
+		</if>
+		order by theater_No
+	</select>
+
+</mapper>

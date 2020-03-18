@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="CartMapper">
+ 	
+	<resultMap id="cartSelectMap" type="Cart">
+		<result property="cartNo" 					column="cart_no" 			jdbcType="INTEGER"/>
+		<result property="cartUserNo" 				column="cart_user_no" 		jdbcType="INTEGER"/>
+		<result property="cartProdNo"				column="cart_prod_no" 		jdbcType="INTEGER"/>
+		<result property="cartProdQuantity" 		column="card_prod_quantity" jdbcType="INTEGER"/>
+		<result property="cartRegDate" 				column="cart_reg_date" 		jdbcType="TIMESTAMP"/>
+	</resultMap>
+	
+	
+	
+	<insert id="addCart" parameterType="Cart">
+	 	INSERT
+		INTO cart ( cart_no , cart_user_no , cart_prod_no , card_prod_quantity , cart_reg_date ) 
+		VALUES (
+		seq_cart_cart_no.NEXTVAL,
+		#{cartUserNo:INTEGER},
+		#{cartProdNo:INTEGER},
+		#{cartProdQuantity:INTEGER},
+		#{cartRegDate:TIMESTAMP} )
+	 </insert>
+	
+
+	<select id="getCartList" parameterType="Search" resultMap="cartSelectMap">
+	 	<include refid="front" /> 
+			SELECT 
+			*
+			FROM CART 
+			<if test="cartUserNo != null">
+						WHERE cart_user_no = #{cartUserNo}
+			</if>
+			order by cart_no
+		<include refid="back" />	  
+	</select>
+	  	
+			
+	<sql id="front">
+  		SELECT * FROM (		SELECT inner_table. * ,  ROWNUM AS row_seq  	FROM (	
+  	</sql>
+  	
+  	 <sql id="back">
+  					) inner_table
+					WHERE ROWNUM &lt;= #{endRowNum} )
+			WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+  	</sql>
+  	
+  		<!-- SQL : SELECTONE -->
+	 <select  id="getTotalCount"  parameterType="Search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	
+			SELECT 
+			*
+			FROM CART 
+			<if test="cartUserNo != null">
+						WHERE cart_user_no = #{cartUserNo}
+			</if>
+			)					
+	 </select>	
+	
+	<delete id="deleteCart" parameterType="cart">
+		DELETE FROM cart 
+		WHERE cart_no = #{cartNo}
+	</delete>
+	
+	
+	<update id="updateCart" parameterType="Cart">
+		update cart 
+	 	<trim prefix="SET" suffixOverrides=",">
+			<if test="cartNo !=null">cart_no = #{cartNo},</if>
+			<if test="cartUserNo !=null">cart_user_no = #{cartUserNo},</if>
+			<if test="cartProdNo !=null">cart_prod_no = #{cartProdNo},</if>
+			<if test="cartProdQuantity !=null">card_prod_quantity = #{cartProdQuantity},</if>
+			<if test="cartRegDate !=null">cart_reg_date = #{cartRegDate},</if>
+		</trim>
+			<where>
+				cart_no = #{cartNo}
+			</where>
+	</update>
+	
+</mapper>

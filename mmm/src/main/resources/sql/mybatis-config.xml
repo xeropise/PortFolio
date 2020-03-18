@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE configuration
+ 		 PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+ 		"http://mybatis.org/dtd/mybatis-3-config.dtd">
+  						
+<!--	mybatis-config.xml :: MyBatis Framework  MetaData -->
+<configuration>
+
+	<!-- 기타 설정정보 :: [MyBatis_Home]/mybatis-3.2.1.pdf 참조 -->
+	<settings>
+		<setting name="callSettersOnNulls" value="false"/>
+	</settings>	
+	
+
+	
+	<!-- FQCN(Full Qualified Class Name) Alias(별칭관리) -->
+	<typeAliases>
+		<typeAlias alias="Search" type="com.mmm.common.Search" />
+		<typeAlias alias="User" type="com.mmm.service.domain.User" />
+		<typeAlias alias="Movie" type="com.mmm.service.domain.Movie" />
+		<typeAlias alias="WishStarRating" type="com.mmm.service.domain.WishStarRating" />
+		<typeAlias alias="Ticketing" type="com.mmm.service.domain.Ticketing" />
+		<typeAlias alias="Theater" type="com.mmm.service.domain.Theater" />
+		<typeAlias alias="DateTime" type="com.mmm.service.domain.DateTime" />
+		<typeAlias alias="Product" type="com.mmm.service.domain.Product" />
+		<typeAlias alias="Purchase" type="com.mmm.service.domain.Purchase" />
+		<typeAlias alias="Cart" type="com.mmm.service.domain.Cart" />
+		<typeAlias alias="Inventory" type="com.mmm.service.domain.Inventory" />
+		<typeAlias alias="Preview" type="com.mmm.service.domain.Preview" />
+		<typeAlias alias="Quiz" type="com.mmm.service.domain.Quiz" />
+		<typeAlias alias="Participation" type="com.mmm.service.domain.Participation" />
+		<typeAlias alias="Payment" type="com.mmm.service.domain.Payment" />
+		<typeAlias alias="Point" type="com.mmm.service.domain.Point" />
+		<typeAlias alias="Article" type="com.mmm.service.domain.Article" />
+		<typeAlias alias="Comment" type="com.mmm.service.domain.Comment" />
+		<typeAlias alias="Like" type="com.mmm.service.domain.Like" />
+		<typeAlias alias="Blind" type="com.mmm.service.domain.Blind" />
+	</typeAliases>
+	
+	<typeHandlers>
+		<typeHandler handler="com.mmm.common.handler.CustomDateHandler"/>
+		<typeHandler handler="com.mmm.common.handler.CustomTimeHandler"/>
+	</typeHandlers>	
+	
+	 <!-- SQL Definition :: file include -->
+	<mappers>
+		<mapper resource="sql/UserMapper.xml"/>
+		<mapper resource="sql/MovieMapper.xml"/>
+		<mapper resource="sql/TicketingMapper.xml"/>
+		<mapper resource="sql/TheaterMapper.xml"/>
+		<mapper resource="sql/DateTimeMapper.xml"/>
+		<mapper resource="sql/ProductMapper.xml"/>
+		<mapper resource="sql/PurchaseMapper.xml"/>
+		<mapper resource="sql/CartMapper.xml"/>
+		<mapper resource="sql/InventoryMapper.xml"/>		
+		<mapper resource="sql/EventMapper.xml"/>
+		<mapper resource="sql/PaymentMapper.xml"/>
+		<mapper resource="sql/PointMapper.xml"/>
+		<mapper resource="sql/BoardMapper.xml"/>
+
+	</mappers>
+
+</configuration>

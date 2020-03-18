@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="PurchaseMapper">
+ 	
+	<resultMap id="purchaseSelectMap" type="purchase">
+		<result property="purchaseNo" 				column="purchase_no" 				jdbcType="INTEGER"  />
+		<result property="purchaseUserNo" 			column="purchase_user_no" 			jdbcType="INTEGER"  />
+		<result property="purchaseProductNo" 		column="purchase_product_No" 		jdbcType="VARCHAR"  />
+		<result property="purchaseProductQuantity" 	column="purchase_product_Quantity" 	jdbcType="VARCHAR"  />
+		<result property="purchaseStatus" 			column="purchase_Status" 			jdbcType="INTEGER"  />
+		<result property="purchasePrice" 			column="purchase_Price" 			jdbcType="INTEGER"  />
+		<result property="purchaseDate" 			column="purchase_Date" 				jdbcType="TIMESTAMP"  />
+		<result property="cancelDate" 				column="cancel_Date" 				jdbcType="TIMESTAMP"  />
+	</resultMap>
+	
+	
+	<insert id="addPurchase" parameterType="Purchase">
+	 	INSERT
+		INTO purchase ( purchase_no, purchase_user_no, purchase_product_No, purchase_product_Quantity, purchase_Status,
+						purchase_Price, purchase_Date, cancel_Date )
+		VALUES	 
+		( seq_purchase_purchase_no.NEXTVAL,
+		  #{purchaseUserNo:INTEGER},
+		  #{purchaseProductNo:VARCHAR},
+		  #{purchaseProductQuantity:VARCHAR},
+		  #{purchaseStatus:INTEGER},
+		  #{purchasePrice:INTEGER},
+		  SYSTIMESTAMP,
+		  #{cancelDate:TIMESTAMP}
+		)
+	 </insert>
+	 
+	<select id="getPurchase" parameterType="int"  resultMap="purchaseSelectMap" >
+	 	SELECT
+	 	*
+	 	FROM purchase	
+		WHERE 
+		purchase_no = #{value}	
+	</select>
+	
+	<select id="recentPurchase" resultMap="purchaseSelectMap" >
+		SELECT *
+		from purchase							
+		WHERE purchase_no = (SELECT LAST_NUMBER-1 FROM USER_SEQUENCES WHERE SEQUENCE_NAME = 'SEQ_PURCHASE_PURCHASE_NO')
+	</select>
+	 
+	<select id="getPurchaseList" parameterType="Search"  resultMap="purchaseSelectMap" >
+	 	<include refid="front" />
+	 	SELECT
+	 	*
+	 	FROM purchase
+	 	<if test="purchaseStatus != 3">
+			<trim prefix="where" suffixOverrides="and">
+				<if test="userNo !=0">purchase_user_no = #{userNo} and</if>
+				<if test="receiverPhone !=null">receiver_phone = #{receiverPhone} and</if>
+				<if test="purchaseStatus != 3">purchase_Status = ${purchaseStatus} and </if>
+			</trim>	
+		</if>
+		order by purchase_no
+		<include refid="back" />	
+	 </select>	 
+	 
+	 <sql id="front">
+  		SELECT * FROM (		SELECT inner_table. * ,  ROWNUM AS row_seq  	FROM (	
+  	</sql>
+  	
+  	 <sql id="back">
+  					) inner_table
+					WHERE ROWNUM &lt;= #{endRowNum} )
+			WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+  	</sql>
+  	
+	 <select  id="getTotalCount"  parameterType="Search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	
+			SELECT 
+			*
+			FROM purchase 
+				<!-- 구매 -->
+				<if test="purchaseStatus ==0 ">
+						WHERE purchase_Status = 0 and purchase_user_no = #{userNo}
+				</if>
+				<!-- 선물  -->
+				<if test="purchaseStatus == 2">
+						WHERE purchase_Status = 2 and purchase_user_no = #{userNo} 
+				</if>		
+			)					
+	 </select>  	
+	
+	<update id="updatePurchase" parameterType="Purchase" >
+	 	UPDATE purchase
+	 	<trim prefix="SET" suffixOverrides=",">
+			<if test="purchaseUserNo !=0">purchase_user_no = #{purchaseUserNo},</if>
+			<if test="purchaseProductNo !=null">purchase_product_No = #{purchaseProductNo},</if>
+			<if test="purchaseProductQuantity !=null">purchase_product_Quantity = #{purchaseProductQuantity},</if>
+			<if test="purchaseStatus !=null">purchase_Status = #{purchaseStatus},</if>
+			<if test="purchasePrice !=0">purchase_Price = #{purchasePrice},</if>
+			<if test="purchaseDate !=null">purchase_Date =#{purchaseDate},</if>
+			<if test="cancelDate !=null">cancel_Date = #{cancelDate},</if>
+		</trim>
+			<where>
+				purchase_no = #{purchaseNo}
+			</where>
+	 </update>
+	 	
+	<delete id="deletePurchase" parameterType="int">
+		DELETE from purchase 
+		WHERE 
+		purchase_user_no = #{value}
+	</delete>
+	
+	
+</mapper>

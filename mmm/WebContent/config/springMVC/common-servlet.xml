@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:mvc="http://www.springframework.org/schema/mvc"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:security="http://www.springframework.org/schema/security"
+		xmlns:task="http://www.springframework.org/schema/task"
+		
+		xsi:schemaLocation=
+				"http://www.springframework.org/schema/beans 
+				http://www.springframework.org/schema/beans/spring-beans.xsd
+				
+				http://www.springframework.org/schema/context 
+				http://www.springframework.org/schema/context/spring-context.xsd
+				
+				http://www.springframework.org/schema/mvc
+				http://www.springframework.org/schema/mvc/spring-mvc.xsd
+				
+       			http://www.springframework.org/schema/security
+       			http://www.springframework.org/schema/security/spring-security-4.0.xsd
+
+				http://www.springframework.org/schema/task 
+       			http://www.springframework.org/schema/task/spring-task-3.1.xsd"> 
+    
+   <!-- :: 공통적인 사항을 설정한 common-servlet.xml 사용. -->
+       
+    <!--  ㅇ 어노테이션 기반 :: Spring Framework 사용.
+    		ㅇ @Controller annotation 선언된 Bean 만 Wiring
+		   ㅇ @Service / @Repository  annotation 선언된 Bean 은 Scan 제외 -->
+		   
+	<context:component-scan base-package="com.mmm.web">
+		<context:include-filter 	type="annotation"		expression="org.springframework.stereotype.Controller" />
+		<context:exclude-filter 	type="annotation" 	expression="org.springframework.stereotype.Service"/>
+		<context:exclude-filter 	type="annotation" 	expression="org.springframework.stereotype.Repository"/>
+	</context:component-scan> 
+	
+	<!-- 	Scheduler 설정 -->
+	<task:scheduler id="addMovieTask" pool-size="10"/>
+	<task:annotation-driven scheduler="addMovieTask"/>
+	
+   	<!-- ■ DefaultAnnotationHandlerMapping 설정 등 기타 Annotation 기반
+   	        모든 기능을 사용 할 수 있는 아래의 설정으로 변경 -->
+	<mvc:annotation-driven />
+	
+	<!--
+   	<mvc:interceptors>
+   		<mvc:interceptor>
+			<mvc:mapping path="/user/**"/>
+			<bean class="com.mmm.common.web.LogonCheckInterceptor" />
+   		</mvc:interceptor>
+   		
+   	</mvc:interceptors>  
+   	-->
+   	
+   	<mvc:interceptors>
+         <mvc:interceptor>
+                  <!-- 모든 경로에 대해 @CheckAuth 어노테이션이 실행되도록 한다. -->
+                  <mvc:mapping path="/**" /> 
+                  <!-- /user/login은 또 다른 interceptor가 처리한다. 즉 컨트롤러에 매핑되어 있는 것이 아니므로 제외시킨다. -->
+                  <!-- <mvc:exclude-mapping path="/user/login"/> -->
+                  <!-- defaultServlet이 처리하는 경로는 제외 -->
+                  <!-- <mvc:exclude-mapping path="/assets/**"/> -->
+                  <bean class="com.mmm.common.handler.AuthInterceptor" />
+         </mvc:interceptor>
+	</mvc:interceptors>
+
+	
+	<!-- ■ Annotation 기반의 모든 기능을 사용 할 수 있는 설정
+	          <mvc:annotation-driven /> 사용으로 interceptor 를 직접
+	          DefaultAnnotationHandlerMapping 에 주입 할 수 없으니 
+	       	  아래의 설정방법으로 interceptor 주입
+   	<mvc:interceptors>
+		
+   		<mvc:interceptor>
+			<mvc:mapping path="/user/**"/>
+			<bean class="com.model2.mvc.common.web.LogonCheckInterceptor" />
+   		</mvc:interceptor>
+
+   	</mvc:interceptors>
+   	
+   	:: 본실습에서는 주석처리 : 추후 PJT 시 RestFul 고려 LogonCheckInterceptor 조건 추가할것
+   	-->
+
+
+
+	<!--  :: ViewResolver 선언 -->	
+    <bean id="viewResolver"
+				class="org.springframework.web.servlet.view.InternalResourceViewResolver" />	
+
+	
+	<bean id="multipartResolver" 
+			class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+<!-- 			<property name="maxUploadSize" value="52428800"/>
+			<property name="defaultEncoding" value="utf-8"/> -->
+	</bean>
+	
+	<!--	
+		■ / 형식의 Mapping 은 모든(정적,동적 자원) 요청시 처리책임
+		■ 정적자원 요청시 DispatcherServlet 에게 처리방법지정
+	    ■ 정적자원요청 (아래의 URI 포함 요청)시  처리 경로 location 지정
+	     	
+	    실제 PJT 진행시 일반적으로 resources 폴더를 만들고 폴더내부에
+	     css , image, js 등 넣어 관리하며 아래와 같이 1번의 설정으로 관리
+	     <mvc:resources mapping="/resources/**" location="/resources/" />
+	--> 
+	
+	<mvc:resources mapping="/resources/**" location="/resources/" />
+<!-- 	<mvc:resources mapping="/css/**" location="/css/" /> -->
+<!--    	<mvc:resources mapping="/images/**" location="/images/" /> -->
+<!--    	<mvc:resources mapping="/javascript/**" location="/javascript/" /> -->
+   	
+
+	<!-- 	:: exception resolver  선언 :: 서술적 / 선언적 예외처리 
+			:: Servlet 에서의 선언적 예외처리를 다시 생각하며....  -->
+	<bean id="exceptionResolver"
+				class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		
+		<property name="exceptionMappings">
+			<props>
+				<prop key="java.lang.NullPointerException">/common/nullError.jsp</prop>
+				<prop key="java.lang.NumberFormatException">/common/numberFormatError.jsp</prop>
+			</props>
+		</property>
+		
+		<property name="defaultErrorView"	value="/common/error.jsp" />
+		
+	</bean>
+	
+
+	 <!-- /////// Client 에서 전달되는 JSON Data 를 Domain Object 롤 변환 받기위한 설정 ///////-->
+	<bean id="jsonConverter"	class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+		<property name="supportedMediaTypes" value="application/json" />
+	</bean>
+	
+	 <!-- /////// AnnotationMethodHandlerAdapter 에 jsonConverer  DI /////// -->
+	 <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<ref bean="jsonConverter" /> 
+			</list>
+		</property>	 
+	 </bean>
+
+
+	 <!-- /////// Client 로 전달되는 Domain Object  를 JSON Data  변환위한 설정            /////// -->
+	 <!-- Client  Response 받기원핟는 Content 타입을 선택,협상(Negotiation)하는 ViewResolver 설정 --> 
+	 <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+
+         <property name="defaultContentType" value="text/html"/>
+
+         <property name="defaultViews">
+             <list>
+                 <bean class="org.springframework.web.servlet.view.json.MappingJacksonJsonView"/>
+             </list>
+         </property>
+     </bean>
+     
+     <!-- Spring security Bean -->
+     <bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+     
+     
+     
+     
+     <!-- javax.mail인 mail-1.4.7.jar lib에 저장 -->
+	<!--메일 발송을 위한 JavaMailSenderImpl 생성 -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+	
+	<!-- 메일 발송을 보낼 계정의 사이트의 SMTP URL 입력
+		 구글의 경우 SMTP URL은 smtp.gmail.com 이다.
+	 -->
+	
+	<property name="host" value="smtp.gmail.com" />
+	
+	<!-- 구글의 STMP Port 번호는 587 -->
+	<property name="port" value="587" />
+	
+	<!-- 메일 발송을 보낼  계정의 아이디 / 비밀번호 입력 -->
+	<property name="username" value="movmovmov6@gmail.com" />
+	<property name="password" value="mmm1234!" />
+	
+	
+	<property name="javaMailProperties">
+		<props>
+			<!-- 구글의 경우 인증에 TLS을 사용하기 때문에 TLS 인증 설정 
+				  단 이 경우 보안 수준이  낮은 앱에 엑세스했다는 경고 메일이 구글 계정으로 오면서 메일 발송이 제대로 되지 않는다
+				  이 경우 구글 계정의 설정을 보안 수준이 낮은 앱에서 엑세스하도록 하용을 해야 한다 -->
+			<prop key="mail.transport.protocol">smtp</prop>
+			<prop key="mail.smtp.auth">true</prop>
+			<prop key="mail.smtp.starttls.enable">true</prop>
+			<prop key="mail.debug">true</prop>
+		</props>
+	  </property>
+	</bean>
+     
+     
+     
+     
+     
+     
+     
+	
+</beans>

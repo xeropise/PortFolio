@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PointMapper">
+
+	<resultMap type="Point" id="pointSelectMap">
+		<result property="pointNo" 				column="POINT_NO" 					jdbcType="NUMERIC"/>
+		<result property="userNo" 				column="user_no" 					jdbcType="NUMERIC"/>
+		<result property="pointStatus" 			column="point_status" 				jdbcType="VARCHAR"/>
+		<result property="paymentNo" 			column="payment_no" 				jdbcType="NUMERIC"/>
+		<result property="partPoint" 			column="part_point" 				jdbcType="NUMERIC"/>
+		<result property="totalPoint" 			column="total_point" 				jdbcType="NUMERIC"/>
+		<result property="pointDate" 			column="point_date" 				jdbcType="TIMESTAMP"/>
+		<result property="cancelDate" 			column="point_cancle_date" 			jdbcType="TIMESTAMP"/>
+		<result property="cancelFlag" 			column="point_cancel_flag" 			jdbcType="NUMERIC"/>
+	</resultMap>
+	
+	<sql id="select-PointList">
+		SELECT 
+		POINT_NO, user_no, UPPER(point_status) point_status, payment_no, point_date,
+		 part_point, SUM(PART_POINT) OVER(ORDER BY point_no) total_point,
+		 point_cancel_flag
+		FROM POINTT
+		<where>
+		USER_NO = #{userNo}
+		AND NVL(POINT_CANCEL_FLAG, 0) = 0
+		</where>
+		ORDER BY POINT_NO DESC	
+	</sql>
+
+<!--  출석체크 리스트 -->
+	<select id="checkList" parameterType="int" resultMap="pointSelectMap">
+		SELECT 
+		POINT_NO, user_no, UPPER(point_status) point_status, payment_no, point_date,
+		 part_point, SUM(PART_POINT) OVER(ORDER BY point_no) total_point
+		FROM POINTT
+		<where>
+		USER_NO = #{userNo}
+		AND UPPER(point_status)= 'S1'
+		AND point_date <![CDATA[>=]]> TRUNC(sysdate, 'MM')
+ 		</where>
+		ORDER BY point_date DESC	
+	</select>
+
+<!-- 	포인트 적립, 사용 추가하기 -->
+	<insert id="addPoint"
+			parameterType="Point">
+	
+		INSERT INTO 
+		POINTT(point_no, USER_NO, PAYMENT_NO, POINT_STATUS, PART_POINT, POINT_DATE)
+		VALUES(seq_pointt_point_no.nextval, 
+				#{userNo:NUMERIC},
+				<if test='pointStatus == "S0" or pointStatus == "U0" '> seq_payment_payment_no.currval, </if> 
+				<if test='pointStatus != "S0" and pointStatus != "U0" '> null, </if> 
+				#{pointStatus:VARCHAR},
+				#{partPoint:NUMERIC},
+				SYSDATE		)
+	</insert>
+	
+	<select id="getSavingPoint" parameterType="int" resultMap="pointSelectMap">
+		SELECT * FROM POINTT WHERE PAYMENT_NO = #{paymentNo} AND UPPER(POINT_STATUS) = 'S0'
+	</select>
+	
+	<select id="getUsingPoint" parameterType="int" resultMap="pointSelectMap">
+		SELECT * FROM POINTT WHERE PAYMENT_NO = #{paymentNo} AND UPPER(POINT_STATUS) = 'U0'
+	</select>
+	
+<!-- 	해당 유저의 사용가능한 포인트 조회 -->
+	<select id="getTotalPoint"
+			parameterType="int"
+			resultType="int">
+	
+		SELECT SUM(PART_POINT)
+		FROM POINTT
+		WHERE USER_NO = #{userNo:NUMERIC}
+			AND NVL(POINT_CANCEL_FLAG, 0) = 0
+	
+	</select>
+	
+<!-- 	해당 유저의 누적 포인트 조회 (사용 포인트 제외) -->
+	<select id="getAccPoint"
+			parameterType="int"
+			resultType="int">
+	
+		SELECT SUM(PART_POINT)
+		FROM POINTT
+		WHERE USER_NO = #{userNo:NUMERIC}
+		    AND UPPER(point_status) IN('S0', 'S1', 'S2')
+		    AND NVL(POINT_CANCEL_FLAG, 0) = 0
+		    
+	</select>
+
+<!-- 	해당 유저의 포인트 사용내역 조회 -->
+	<select id="getPointList"
+			parameterType="Search"
+			resultMap="pointSelectMap">
+	
+		SELECT * 
+		FROM (	SELECT inner_table.*,  ROWNUM AS row_seq 
+				FROM (
+					<include refid="select-PointList" />
+													) inner_table 
+				<where>
+				ROWNUM <![CDATA[<=]]> #{endRowNum} 
+				</where> )
+		<where>
+		row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+		</where> 
+	</select>
+	
+<!-- 	totalCnt for 포인트 사용내역 조회   -->
+	<select id="getTotalCntPointList"
+			parameterType="Search"
+			resultType="int">
+			
+		SELECT COUNT(*)
+	    FROM ( 
+			<include refid="select-PointList"/>
+		 ) countTable
+	</select>
+	
+	<update id="cancelPoint" parameterType="int">
+		UPDATE POINTT
+		<set>
+			POINT_CANCEL_FLAG = 1,
+			POINT_CANCLE_DATE = SYSDATE
+		</set>
+		WHERE point_no = #{pointNo}
+	
+	</update>
+	
+<!-- 	출석체크 중복 확인을 위한 ... -->
+	<select id="checkAttendance"
+			parameterType="int"
+			resultType="int">
+		SELECT
+		COUNT(*)
+		FROM POINTT p
+		WHERE POINT_STATUS = 'S1'
+			AND USER_NO = #{userNo}
+			AND TO_CHAR(POINT_DATE,'YYYYMMDD') = TO_CHAR(SYSDATE,'YYYYMMDD')
+	</select>
+
+</mapper>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="TicketingMapper">
+
+	<resultMap type="Ticketing" id="TicketingSelectMap">
+		<result property="ticketingNo" 		column="ticketing_no" 		jdbcType="VARCHAR" />
+		<result property="movieName" 		column="movie_Name" 		jdbcType="VARCHAR" />
+	<!-- 	<result property="movieNo" column="movie_no" jdbcType="VARCHAR" />  --> 
+		<result property="theaterName" 		column="theater_name" 		jdbcType="VARCHAR" />
+		<result property="dateTimeNo" 		column="date_time_no" 		jdbcType="VARCHAR" />
+		<result property="audienceType" 	column="audience_type" 		jdbcType="VARCHAR" />
+		<result property="seatType" 		column="seat_type" 			jdbcType="VARCHAR" />
+		<result property="seatNo"	 		column="seat_no" 			jdbcType="VARCHAR" />
+		<result property="headCount" 		column="head_count" 		jdbcType="INTEGER" />
+		<result property="ticketingPrice" 	column="ticketing_price" 	jdbcType="INTEGER" />
+		<result property="ticketingPinNo" 	column="ticketing_pin_no" 	jdbcType="VARCHAR" />
+		<result property="ticketerPhone" 	column="ticketer_phone" 	jdbcType="VARCHAR" />
+		<result property="ticketingDate" 	column="ticketing_date" 	jdbcType="TIMESTAMP" />
+		<result property="cancelDate" 		column="cancel_date" 		jdbcType="TIMESTAMP" />
+		<result property="ticketingStatus" 	column="ticketing_status" 	jdbcType="INTEGER" />
+	</resultMap>
+	
+	<insert id="addTicketing" parameterType="Ticketing">
+		insert into Ticketing 
+		(ticketing_no, movie_Name, <!-- movie_no, --> theater_name, date_time_no, audience_type, seat_type,
+		seat_no, head_count, ticketing_price, ticketing_pin_no, ticketer_phone, ticketing_date, ticketing_status)
+		values 
+		(seq_ticketing_ticketing_no.NEXTVAL,
+		#{movieName:VARCHAR},
+	<!-- #{movieNo:INTEGER},  -->
+		#{theaterName:VARCHAR},
+		#{dateTimeNo:VARCHAR},
+		#{audienceType:VARCHAR},
+		#{seatType:VARCHAR},
+		#{seatNo:VARCHAR},
+		#{headCount:INTEGER},
+		#{ticketingPrice:INTEGER},
+		#{ticketingPinNo:VARCHAR},
+		#{ticketerPhone:VARCHAR},
+		 SYSDATE, 
+		#{ticketingStatus:INTEGER})
+	</insert>
+	
+	<!-- trim태그 사이에 다른 절이 삽입되는경우에, 다른 태그도 Overrides동작을 같이 받는다.. -->
+	<update id="updateTicketing" parameterType="Ticketing">
+		UPDATE Ticketing
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="movieName !=null">movie_Name = #{movieName},</if>
+		<!-- <if test="movieNo !=null">movie_no = #{movieNo},</if>  -->
+			<if test="theaterName !=null">theater_name = #{theaterName},</if>
+			<if test="dateTimeNo !=null">date_time_no = #{dateTimeNo},</if>
+			<if test="audienceType !=null">audience_type = #{audienceType},</if>
+			<if test="seatType !=null">seat_type = #{seatType},</if>
+			<if test="seatNo !=null">seat_no = #{seatNo},</if>
+			<if test="headCount !=null">head_count = #{headCount},</if>
+			<if test="ticketingPrice !=null">ticketing_price = #{ticketingPrice},</if>
+			<if test="ticketingPinNo !=null">ticketing_pin_no = #{ticketingPinNo},</if>
+			<if test="ticketerPhone !=null">ticketer_Phone = #{ticketerPhone},</if>
+			<if test="ticketingDate !=null">ticketing_date = #{ticketingDate},</if>
+			cancel_date = systimestamp,
+			ticketing_status = 1
+		</trim>
+			<where>
+				ticketing_no = #{ticketingNo}
+			</where>
+
+	</update>
+	
+	<delete id="deleteTicketing" parameterType="String">
+		DELETE from Ticketing WHERE ticketing_no = #{ticketingNo}
+	
+	</delete>
+	
+
+	<select id="getTicketing" parameterType="String" resultMap="TicketingSelectMap">
+		select
+		ticketing_no, movie_Name, theater_name, date_time_no, audience_type, seat_type,
+		seat_no, head_count, ticketing_price, ticketing_pin_no, ticketer_phone, ticketing_date, cancel_date, ticketing_status
+		from Ticketing WHERE ticketing_no = #{ticketingNo}
+	</select>
+	
+	<select id="recentTicketing" resultMap="TicketingSelectMap">
+		SELECT *
+		from Ticketing
+		WHERE ticketing_no = (SELECT LAST_NUMBER-1 FROM USER_SEQUENCES WHERE SEQUENCE_NAME = 'SEQ_TICKETING_TICKETING_NO')
+	
+	</select>	
+	<select id="getTicketingList" parameterType="Search" resultMap="TicketingSelectMap">
+	 	<include refid="front" /> 
+			SELECT 
+			ticketing_no, movie_Name, theater_name, date_time_no, audience_type, seat_type,
+			seat_no, head_count, ticketing_price, ticketing_pin_no, ticketer_phone, ticketing_date, cancel_date, ticketing_status
+			FROM Ticketing 
+			<if test="searchCondition != null">
+				<if test="searchCondition==0">
+						WHERE cancel_date IS NULL and ticketer_phone = ${ticketerPhone}
+						order by ticketing_date desc
+				</if>
+	
+				<if test="searchCondition==1">
+						WHERE cancel_date IS NOT NULL and ticketer_phone = ${ticketerPhone}
+						order by cancel_date desc
+				</if>
+				
+				<if test="searchCondition==2">
+						WHERE cancel_date IS NULL and ticketer_phone = ${ticketerPhone}
+						order by ticketing_date desc
+				</if>
+				
+			</if>
+			
+		<include refid="back" />	  
+	</select>
+	  	
+			
+	<sql id="front">
+  		SELECT * FROM (		SELECT inner_table. * ,  ROWNUM AS row_seq  	FROM (	
+  	</sql>
+  	
+  	 <sql id="back">
+  					) inner_table
+					WHERE ROWNUM &lt;= #{endRowNum} )
+			WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+  	</sql>
+  	
+  		<!-- SQL : SELECTONE -->
+	 <select  id="getTotalCount"  parameterType="Search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	
+			SELECT 
+			ticketing_no, movie_Name, theater_name, date_time_no, audience_type, seat_type,
+			seat_no, head_count, ticketing_price, ticketing_pin_no, ticketer_phone, ticketing_date, cancel_date, ticketing_status
+			FROM Ticketing 
+			<if test="searchCondition != null">
+				<if test="searchCondition==0">
+						WHERE cancel_date IS NULL and ticketer_phone = ${ticketerPhone}
+				</if>
+	
+				<if test="searchCondition==1">
+						WHERE cancel_date IS NOT NULL and ticketer_phone = ${ticketerPhone}
+				</if>		
+			</if>
+			)					
+	 </select>
+ 
+ 
+	<!-- 
+	 <select  id="getTotalCount"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(			SELECT A.*, B.tran_status_code, B.tran_no
+		FROM product A, transaction B
+		WHERE A.prod_no=B.prod_no(+) and B.tran_status_code IS NOT NULL
+		<if test="searchCondition != null">
+			<if test="searchCondition==0">
+					and A.PROD_NO like '%'||#{searchKeyword}||'%'
+			</if>
+			
+			<if test="searchCondition==1">
+					and A.PROD_NAME like '%'||#{searchKeyword}||'%'
+			</if>
+			
+			<if test="searchCondition==2">
+					and A.price like '%'||#{searchKeyword}||'%'
+			</if>
+		</if>
+		order by A.PROD_NO ) 	
+	 </select>	
+	 -->	
+	
+</mapper>

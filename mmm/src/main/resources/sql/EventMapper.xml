@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "EventMapper">
+
+	<resultMap id="quizSelectMap" type="com.mmm.service.domain.Quiz">
+	
+	<result property = "quizNo" column="quiz_no" jdbcType="NUMERIC" />
+	<result property = "question" column="question" jdbcType="VARCHAR" />
+	<result property = "optionFirst" column="option1" jdbcType="VARCHAR" />
+	<result property = "optionSecond" column="option2" jdbcType="VARCHAR" />
+	<result property = "optionThird" column="option3" jdbcType="VARCHAR" />
+	<result property = "optionFourth" column="option4" jdbcType="VARCHAR" />
+	<result property = "answer" column="answer" jdbcType="NUMERIC" />
+	<result property = "quizStartDate" column="start_date" jdbcType="TIMESTAMP" />
+	<result property = "quizDate" column="quiz_date" jdbcType="TIMESTAMP" />
+	<result property = "quizFlag" column="quiz_status" jdbcType="NUMERIC" />
+
+	</resultMap>
+
+	<resultMap id="previewSelectMap" type="com.mmm.service.domain.Preview">
+	
+	<result property = "previewNo" column="preview_no" jdbcType="NUMERIC" />
+	<result property = "previewName" column="preview_name" jdbcType="VARCHAR" />
+	<result property = "previewPlace" column="preview_place" jdbcType="VARCHAR" />
+	<result property = "previewDate" column="preview_date" jdbcType="TIMESTAMP" />
+	<result property = "previewImage" column="image_file" jdbcType="VARCHAR" />
+	<result property = "previewStartDate" column="start_date" jdbcType="TIMESTAMP" />
+	<result property = "previewEndDate" column="end_date" jdbcType="TIMESTAMP" />
+	<result property = "winnerCount" column="winner_count" jdbcType="NUMERIC" />
+	<result property = "winnerDate" column="winner_date" jdbcType="TIMESTAMP" />
+	<result property = "previewRegDate" column="preview_regdate" jdbcType="TIMESTAMP" />
+	<result property = "previewFlag" column="preview_status" jdbcType="VARCHAR" />
+	<result property = "movieNo" column="movie_no" jdbcType="NUMERIC" />
+
+	</resultMap>
+	
+	<resultMap id="partSelectMap" type="com.mmm.service.domain.Participation">
+	
+	<result property = "partNo" column="part_no" jdbcType="NUMERIC" />
+	<result property = "previewNo" column="preview_no" jdbcType="NUMERIC" />
+	<result property = "previewName" column="preview_name" jdbcType="NUMERIC" />
+	<result property = "quizNo" column="quiz_no" jdbcType="NUMERIC" />
+	<result property = "userNo" column="user_no" jdbcType="NUMERIC" />
+	<result property = "partType" column="part_type" jdbcType="NUMERIC" />
+	<result property = "winningFlag" column="winning_flag" jdbcType="NUMERIC" />
+	<result property = "partDate" column="part_date" jdbcType="TIMESTAMP" />
+	<result property = "totalQuizCount" column="total" jdbcType="NUMERIC" />
+	<result property = "winQuizCount" column="winning" jdbcType="NUMERIC" />
+
+
+	</resultMap>
+
+	<select id="getAllPreview" resultMap="previewSelectMap">
+	select * from preview
+	ORDER BY end_date DESC
+	</select>
+
+	<!--퀴즈추가하기 -->
+	<insert id="addQuiz" parameterType="com.mmm.service.domain.Quiz">
+		INSERT
+		INTO quiz( quiz_no, question, option1, option2, option3, option4, answer, start_date, quiz_date )
+		VALUES ( seq_quiz_quiz_no.nextval,
+				 #{question},
+				 #{optionFirst},
+				 #{optionSecond},
+				 #{optionThird},
+    			 #{optionFourth},
+				 #{answer},
+				 #{quizStartDate},
+                 SYSDATE
+                  )
+	</insert>
+
+
+	<!-- SQL : 퀴즈 가져오기 -->
+	<select id="getQuizAd" parameterType="int" resultMap="quizSelectMap">
+		SELECT
+		*
+		FROM quiz
+		WHERE quiz_no = #{value}
+	</select>
+
+
+	<!-- SQL : UPDATE -->
+	<update id="updateQuiz" parameterType="com.mmm.service.domain.Quiz">
+		UPDATE quiz
+		<set>
+		question = #{question},  
+		option1 = #{optionFirst},  
+		option2 = #{optionSecond},  
+		option3 = #{optionThird},  
+		option4 = #{optionFourth},  
+		answer = #{answer},  
+		start_date = #{quizStartDate},  
+		quiz_date = SYSDATE, 
+		</set>
+		WHERE quiz_no = #{quizNo}
+	</update>
+
+
+	<!-- SQL : 퀴즈삭제시 quiz_staus느 -->
+	<update id="deleteQuiz" parameterType="int">
+		update quiz
+		set
+		quiz_status = 1
+		where
+		quiz_no = #{value}	
+	</update>
+	
+	
+	<!-- SQL : INSERT -->
+	<insert id="addPreview" parameterType="com.mmm.service.domain.Preview">
+		INSERT
+		INTO preview( preview_no, preview_name, preview_place, preview_date, image_file, start_date, end_date, winner_count, winner_date, preview_regdate, preview_status, movie_no )
+		VALUES ( seq_preview_preview_no.nextval,
+				 #{previewName},
+				 #{previewPlace},
+				 #{previewDate},
+    			 #{previewImage},
+				 #{previewStartDate},
+				 #{previewEndDate},
+                 #{winnerCount},
+                 #{winnerDate},
+                 SYSDATE,
+                 0,
+                 #{movieNo}
+                   )
+	</insert>
+	
+	
+	
+	<!-- SQL : SELECT ONE -->
+	<select id="getPreviewAd" parameterType="int" resultMap="previewSelectMap">
+		SELECT
+		*
+		FROM preview
+		WHERE preview_no = #{value}
+	</select>
+
+	
+	 
+	<!-- SQL : UPDATE -->
+	<update id="updatePreview" parameterType="com.mmm.service.domain.Preview">
+		UPDATE preview
+		<set>
+		preview_name = #{previewName},  
+		preview_place = #{previewPlace},  
+		preview_date = #{previewDate},  
+		image_file = #{previewImage},  
+		start_date = #{previewStartDate},  
+		end_date = #{previewEndDate},  
+		winner_count = #{winnerCount},  
+		winner_date = #{winnerDate},  
+		preview_regdate = SYSDATE 
+		</set>
+		WHERE preview_no = #{previewNo}
+	</update>
+
+
+
+	<!-- SQL : DELETE -->
+	<delete id="deletePreview" parameterType="int">
+		DELETE
+		FROM preview
+		WHERE preview_no = #{value}	
+	</delete>
+	
+		
+		
+	<!-- SQL : INSERT -->
+	<insert id="addPartPrev" parameterType="com.mmm.service.domain.Participation">
+		INSERT
+		INTO participation( part_no, preview_no, user_no, part_type, part_date )
+		VALUES ( seq_participation_part_no.nextval,
+				 #{previewNo},
+				 #{userNo},
+				 1,
+                 SYSDATE  )
+	</insert>
+	
+	
+	
+	<!-- SQL : INSERT -->
+	<insert id="addPartQuiz" parameterType="com.mmm.service.domain.Participation">
+		INSERT
+		INTO participation( part_no, quiz_no, user_no, part_type, part_date )
+		VALUES ( seq_participation_part_no.nextval,
+				 #{quizNo},
+				 #{userNo},
+				 0,
+                 SYSDATE  )
+	</insert>
+	
+	
+	<!-- SQL : SELECTONE -->
+	 <select  id="getTotalPrev"  parameterType="com.mmm.common.Search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	
+			<include refid="srchPrev"/>	
+		 ) countTable						
+	 </select>
+	 
+	 
+	 <!-- SQL : SELECTLIST -->
+		<select  id="getPreviewListAd"  parameterType="com.mmm.common.Search"	resultMap="previewSelectMap">
+	  		SELECT 
+	  		*
+	  		FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+	  				FROM (	
+	  					<include refid="srchPrev"/>	
+	  					) inner_table
+					WHERE ROWNUM &lt;= #{endRowNum} )
+			WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+	 </select>
+	 
+	 
+	 <sql id="srchPrev">	 
+		 SELECT
+		 	*
+		 FROM preview
+			<if test="searchCondition!= null">
+			  <where>
+				<if test="searchCondition == 0 and searchKeyword !='' ">
+					preview_name = #{searchKeyword}
+				</if>
+				</where>
+			</if>	
+				
+			<if test="previewFlag!= null">
+				<where>
+				<if test="previewFlag == 0">
+				   	
+				  </if>
+				   <if test="previewFlag == 1">
+				   	preview_status = 0
+				  </if>
+				 <if test="previewFlag == 2">
+				    preview_status = 1
+				</if>
+			</where>
+			</if>
+ </sql>
+	 
+	 
+	 
+	  <sql id="srchQuiz">	 
+		 SELECT
+		 	*
+		 FROM quiz
+			  <where>
+<!-- 				 end_date <![CDATA[ >= ]]> SYSDATE -->
+				<if test="searchCondition!= null">
+					<if test="searchCondition == 0 and searchKeyword !='' ">
+					 AND quiz_no = #{searchKeyword}
+					</if>
+					<if test="searchCondition == 1 and searchKeyword !='' ">
+	 		 		 AND quiz_question = #{searchKeyword}
+					</if>
+				</if>
+			</where>
+				ORDER BY quiz_status
+	 </sql>
+	 
+	 
+	 	<!-- SQL : SELECTONE -->
+	 <select  id="getTotalQuiz"  parameterType="com.mmm.common.Search"	 resultType="int">
+	  		SELECT COUNT(*)
+	  		FROM(	
+			<include refid="srchQuiz"/>	
+		 	) countTable	
+	 </select>
+	 
+	 
+
+ 
+ 	 <!-- SQL : SELECTLIST -->
+	<select  id="getQuizListAd"  parameterType="com.mmm.common.Search"	resultMap="quizSelectMap">
+  		SELECT 
+  			*
+  		FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+  				FROM (	
+  					<include refid="srchQuiz"/>	
+  					) inner_table
+				WHERE ROWNUM &lt;= #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+ </select>
+ 
+
+
+	<!-- SQL UPDATE: 당첨시 winning_flag 를 update 해주는 sql -->
+	<update id="updateWinningFlag" parameterType="Map">
+			UPDATE participation
+			SET winning_flag = 1
+			WHERE 
+			preview_no = #{previewNo} AND 
+		<foreach item="user"  index="index" collection="userList" separator="OR" open="(" close=")">
+			user_no = #{user}	
+		</foreach>
+	</update>
+	
+	<!-- SQL UPDATE: 퀴즈 정답시 winning_flag 를 update 해주는 sql -->
+	<update id="updateQuizFlag" parameterType="Map">
+			UPDATE participation
+			SET winning_flag = 1
+			WHERE 
+			quiz_no = #{quizNo} AND
+			user_no = #{user}
+	</update>
+	
+	
+	<!-- SQL SELECTLIST:응모자 리스트 출력  --> 
+	<select  id="getApplyList" parameterType="int" resultMap="partSelectMap">
+	
+		SELECT
+		p.part_no, u.user_no, p.part_date, p.winning_flag, p.preview_no, p.part_type
+		FROM users u, participation p
+		WHERE u.user_no = p.user_no
+		AND p.preview_no = #{previewNo}
+			
+	 </select>
+	
+	
+	<!-- SQL SELECTLIST:당첨자 조회 출력  --> 
+	<select  id="getWinnerList" parameterType="int" resultMap="partSelectMap">
+	
+		SELECT
+		p.part_no, u.user_no, p.part_date, p.winning_flag, p.preview_no, p.part_type
+		FROM users u, participation p
+		WHERE u.user_no = p.user_no
+		AND p.preview_no = #{previewNo}
+		AND p.winning_flag = 1
+			
+	 </select>
+	
+	
+	<!--SQL SELECTLIST:내 응모내역 /퀴즈 참여 리스트 조회 -->
+<!-- 	<select id="getPartList" parameterType="int" resultMap="partSelectMap"> -->
+<!-- 		SELECT -->
+<!-- 		p.part_no, p.preview_no, p.quiz_no, u.user_no, u.user_name, p.part_date, p.winning_flag -->
+<!-- 		FROM users u, participation p -->
+<!-- 		WHERE u.user_no = p.user_no -->
+<!-- 		AND u.user_no = #{userNo} -->
+<!-- 	</select> -->
+	
+	
+	 	 <!-- SQL : getPartList -->
+	<select  id="getPartList"  parameterType="com.mmm.common.Search"	resultMap="partSelectMap">
+  		SELECT 
+  		*
+  		FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+  				FROM (	
+  					<include refid="srchPartList"/>	
+  					) inner_table
+				WHERE ROWNUM &lt;= #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+ </select>
+ 
+  <sql id="srchPartList">	 
+		SELECT p.part_no, p.preview_no, p.quiz_no, u.user_no, u.user_name, p.part_date, p.winning_flag, e.preview_name
+		FROM users u, participation p, preview e
+		WHERE 
+		 	   u.user_no = p.user_no 
+		  AND  p.preview_no = e.preview_no
+		  AND  u.user_no = #{userNo}
+ 		ORDER BY p.part_date desc
+	 </sql>
+ 
+ 
+	 	<!-- SQL : SELECTONE -->
+	 <select  id="getTotalPartList"  parameterType="com.mmm.common.Search"	 resultType="int">
+	  		SELECT COUNT(*)
+	  		FROM(	
+			<include refid="srchPartList"/>	
+		 	) countTable	
+	 </select>
+	 
+	
+	
+	
+<!-- 	parameterType :: modelAttribute같은 애 -->
+	<select id= "checkPart" parameterType="map" resultType="Integer">
+	SELECT 	COUNT(*) 
+	FROM participation
+	WHERE user_no = #{userNo}
+	AND preview_no = #{previewNo}
+	</select>
+
+	<select id= "checkQuiz" parameterType="map" resultType="Integer">
+	SELECT 	COUNT(*) 
+	FROM participation
+	WHERE user_no = #{userNo}
+	AND quiz_no = #{quizNo}
+	</select>
+	
+	
+	<!-- SQL SELECTONE: 참여 상세조회  -->
+	<select id="getParticipation" parameterType="int" resultMap="partSelectMap">
+		SELECT
+		part_no, preview_no, quiz_no, user_no, part_type, part_date
+		FROM participation
+		WHERE part_no = #{partNo}
+	</select>
+	
+	
+<!--Quiz 기록을 가져온다  -->
+	<select id="getQuizRecord" parameterType="int" resultMap="partSelectMap">
+		  SELECT 
+		  user_no, count(*) total, SUM( DECODE (WINNING_FLAG, 1, 1, 0)) winning
+		  FROM participation
+		  WHERE part_type = 0
+		  AND user_no = #{value} 
+		  GROUP BY user_no
+	</select>
+
+<!-- 이벤트 플래그 0:시작전 , 1:진행중, 2: 마감-->
+<!-- 이벤트 플래그가 0이고 시작날짜가 오늘인  시사회 이벤트 리스트를 가져오기-->
+  <select id="getStartPrevList" resultMap="previewSelectMap">
+  		 SELECT 
+  				preview_no, preview_name, preview_place, preview_date, image_file, start_date, end_date, 
+				winner_count, winner_date, preview_regdate, preview_status, TO_CHAR(END_DATE, 'yyyyMMdd') 
+		 FROM preview
+		 WHERE preview_status = 0
+		 AND TO_CHAR(START_DATE, 'yyyyMMdd') = TO_CHAR(SYSDATE,'yyyyMMdd') 
+  </select>
+  
+<!-- 이벤트 플래그가 1이고, 종료일자가 오늘인 시사회 이벤트 리스트를 가져오기-->
+  <select id="getRandList" resultMap="previewSelectMap">
+  		 SELECT 
+  				preview_no, preview_name, preview_place, preview_date, image_file, start_date, end_date, 
+				winner_count, winner_date, preview_regdate, preview_status, TO_CHAR(END_DATE, 'yyyyMMdd') 
+		 FROM preview
+		 WHERE preview_status = 1
+	     AND TO_CHAR(END_DATE+1, 'yyyyMMdd') = TO_CHAR(SYSDATE,'yyyyMMdd') 
+  </select>
+
+  
+<!-- 이벤트 마감 플래그로 업데이트 시키기  -->
+  <update id="updatePrevStatus" parameterType="int">
+  		 UPDATE PREVIEW
+		 SET 
+		  preview_status = preview_status + 1 
+		 WHERE PREVIEW_NO = #{value}
+  </update>
+
+	
+</mapper>

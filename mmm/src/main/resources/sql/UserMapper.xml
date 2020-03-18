@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="UserMapper">
+
+	<resultMap type="User" id="userSelectMap" >
+		<result property="userNo" column="user_no" jdbcType="INTEGER"/>
+		<result property="userId" column="user_id" jdbcType="VARCHAR"/>
+		<result property="userName" column="user_name" jdbcType="VARCHAR"/>
+		<result property="password" column="password" jdbcType="VARCHAR"/>
+		<result property="role" column="role" jdbcType="VARCHAR"/>
+		<result property="profile" column="profile" jdbcType="VARCHAR"/>
+		<result property="birth" column="birth" jdbcType="VARCHAR"/>
+		<result property="gender" column="gender" jdbcType="VARCHAR"/>
+		<result property="phone" column="phone" jdbcType="VARCHAR"/>
+		<result property="email" column="email" jdbcType="VARCHAR"/>
+		<result property="likeGenre1" column="like_genre1" jdbcType="VARCHAR"/>
+		<result property="likeGenre2" column="like_genre2" jdbcType="VARCHAR"/>
+		<result property="likeGenre3" column="like_genre3" jdbcType="VARCHAR"/>
+		<result property="likeTheater1" column="like_theater1" jdbcType="VARCHAR"/>
+		<result property="likeTheater2" column="like_theater2" jdbcType="VARCHAR"/>
+		<result property="likeTheater3" column="like_theater3" jdbcType="VARCHAR"/>
+		<result property="userDate" column="user_date" jdbcType="TIMESTAMP"/>
+		<result property="userByeDate" column="user_bye_date" jdbcType="TIMESTAMP"/>
+		<result property="lastLoginDate" column="last_login_date" jdbcType="TIMESTAMP"/>
+		<result property="updateUserDate" column="update_user_date" jdbcType="TIMESTAMP"/>
+		<result property="updatePwDate" column="update_pw_date" jdbcType="TIMESTAMP"/>
+		<result property="identity" column="identity" jdbcType="INTEGER"/>
+		<result property="userStatus" column="user_status" jdbcType="INTEGER"/>
+		<result property="userGrade" column="user_grade" jdbcType="INTEGER"/>
+		<result property="totalPoint" column="total_point" jdbcType="INTEGER"/>
+		<result property="accPoint" column="acc_point" jdbcType="INTEGER"/>
+	</resultMap>
+	
+	<resultMap type="java.util.HashMap" id="seenMovieSelectMap">
+		<result javaType="java.lang.String" column="MOVIE_NAME" property="movieName"/>
+		<result javaType="java.lang.String" column="POSTER" property="poster"/>
+		<result javaType="java.lang.String" column="MOVIE_NO" property="movieNo"/>
+	</resultMap>
+	
+ 	<!-- SQL : SELECT ONE -->
+ 	<select id="getUser" parameterType="Integer" resultMap="userSelectMap">
+	 	SELECT 
+		 	*
+		 from users
+	 	WHERE user_no = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : Id Duplication -->
+ 	<select id="getUserIdDupl" parameterType="String" resultMap="userSelectMap">
+	 	SELECT 
+		 	user_id
+		 	from users
+	 	WHERE user_id = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : phone Duplication -->
+ 	<select id="getPhoneDupl" parameterType="String" resultMap="userSelectMap">
+	 	SELECT 
+		 	*
+		 	from users
+	 	WHERE phone = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : email Duplication -->
+ 	<select id="getEmailDupl" parameterType="String" resultMap="userSelectMap">
+	 	SELECT 
+		 	email
+		 	from users
+	 	WHERE email = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : SELECT Id -->
+ 	<select id="getUserId" parameterType="String" resultMap="userSelectMap">
+	 	SELECT 
+		 	*
+		 	from users
+	 	WHERE user_id = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : SELECT PHONE -->
+ 	<select id="getPhone" parameterType="String" resultMap="userSelectMap">
+	 	SELECT 
+		 	*
+		 	from users
+	 	WHERE phone = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : SELECT Email -->
+ 	<select id="getEmail" parameterType="String" resultMap="userSelectMap">
+	 	SELECT 
+		 	*
+		 	from users
+	 	WHERE email = #{value}
+ 	</select>
+ 	
+ 	<!-- SQL : INSERT -->
+	<insert id="addUser" parameterType="User">
+	INSERT
+	INTO users(user_no , user_id , user_name , password , role, birth , gender , phone , email , like_genre1 , 
+				like_genre2 , like_genre3 , like_theater1 , like_theater2 , like_theater3 , user_date, identity)
+	VALUES	( seq_users_user_no.NEXTVAL , #{userId} , #{userName:VARCHAR} , #{password} ,#{role:VARCHAR}, #{birth} , #{gender} , #{phone} , #{email:VARCHAR} ,
+			  #{likeGenre1:VARCHAR} , #{likeGenre2:VARCHAR} , #{likeGenre3:VARCHAR} , #{likeTheater1:VARCHAR} , #{likeTheater2:VARCHAR} ,
+			  #{likeTheater3:VARCHAR} , SYSTIMESTAMP, #{identity} )
+	</insert>
+	
+	<!-- SQL : INSERT -->
+	<insert id="extraAddUser" parameterType="User">
+	INSERT
+	INTO users(user_no , user_id , user_name , password, birth , gender , phone , email , like_genre1 , 
+				like_genre2 , like_genre3 , like_theater1 , like_theater2 , like_theater3 , user_date, identity)
+	VALUES	( seq_users_user_no.NEXTVAL , #{userId} , #{userName:VARCHAR} , #{password}, #{birth} , #{gender} , #{phone} , #{email:VARCHAR} ,
+			  #{likeGenre1:VARCHAR} , #{likeGenre2:VARCHAR} , #{likeGenre3:VARCHAR} , #{likeTheater1:VARCHAR} , #{likeTheater2:VARCHAR} ,
+			  #{likeTheater3:VARCHAR} , SYSTIMESTAMP, #{identity} )
+	</insert>
+
+	<!-- SQL : UPDATE -->
+	<update id="updateUser" parameterType="User">
+		UPDATE users
+		 <trim prefix="SET" suffixOverrides=",">
+	      <if test="password != null">password= #{password},</if>
+	      <if test="userName != null">user_name= #{userName},</if>
+	      <if test="gender != null">gender= #{gender},</if>     
+	      <if test="phone != null">phone= #{phone},</if>   
+	      <if test="email != null">email= #{email},</if>
+	      <if test="likeGenre1 != null">like_genre1= #{likeGenre1},</if>
+	      <if test="likeGenre2 != null">like_genre2= #{likeGenre2},</if>
+	      <if test="likeGenre3 != null">like_genre3= #{likeGenre3},</if>
+	      <if test="likeTheater1 != null">like_theater1= #{likeTheater1},</if>
+	      <if test="likeTheater2 != null">like_theater2= #{likeTheater2},</if>
+	      <if test="likeTheater3 != null">like_theater3= #{likeTheater3},</if>
+	      <if test="totalPoint != null">total_point= #{totalPoint},</if>
+	      <if test="accPoint != null">acc_point= #{accPoint},</if>
+	      <if test="profile != null">profile= #{profile},</if>
+	      update_pw_date = SYSTIMESTAMP
+	    </trim>
+   	   WHERE user_no= #{userNo}
+	</update>
+	
+	<!-- SQL : UPDATE UserStatus -->
+	<update id="updateUserStatus" parameterType="User">
+		UPDATE users
+		 <trim prefix="SET" suffixOverrides=",">
+		  <if test="userStatus == 1">user_status = 0,</if>
+	      <if test="userStatus == 0">user_status = 1</if> 
+	    </trim>
+   	   WHERE user_no= #{userNo}
+	</update>
+	
+	<!-- SQL : UPDATE UserDate -->
+	<update id="updateDate" parameterType="User">
+		UPDATE users
+		 <trim prefix="SET" suffixOverrides=",">
+		  <if test="lastLoginDate != sysdate">user_status = 0,</if>
+	      <if test="userStatus == 0">user_status = 1</if> 
+	    </trim>
+   	   WHERE user_no= #{userNo}
+	</update>
+	
+	
+
+	<!-- SQL : SELECT LIST  -->
+	
+		<select  id="getUserList"  parameterType="search"	resultMap="userSelectMap">
+	  	SELECT *
+	  	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+	  					FROM		(	SELECT user_no , user_id , user_name , gender , user_grade , total_point ,
+	  					 						email, phone , user_status , identity, user_date
+											FROM users
+											<if test="searchCondition != null">
+												<where>
+													<if test="searchCondition == 0 and searchKeyword !='' ">
+										 				user_id = #{searchKeyword}
+													</if>
+													<if test="searchCondition == 1 and searchKeyword !='' ">
+										 				user_name = #{searchKeyword}
+													</if>
+													<if test="searchCondition == 2 and searchKeyword !='' ">
+										 				user_grade = #{searchKeyword}
+													</if>
+												</where>
+											</if>
+											ORDER BY user_id ) inner_table
+						WHERE ROWNUM &lt;= #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+	 </select>
+	
+	<!-- SQL : SELECT ROW Count -->	 
+	 <select  id="getTotalCount"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	SELECT user_no , user_id , user_name , gender , user_grade , total_point , email, phone , user_status , identity, user_date
+						FROM users
+						<if test="searchCondition != null">
+							<where>
+								<if test="searchCondition == 0 and searchKeyword !='' ">
+						 			user_id = #{searchKeyword}
+								</if>
+								<if test="searchCondition == 1 and searchKeyword !='' ">
+						 			user_name = #{searchKeyword}
+								</if>
+								<if test="searchCondition == 2 and searchKeyword !='' ">
+									user_grade = #{searchKeyword}
+								</if>
+							</where>
+						</if> ) countTable						
+	 </select>
+
+	<select id="getSeenMovieList" parameterType="search" resultMap="seenMovieSelectMap">	
+		SELECT MOVIE_NAME, POSTER, MOVIE_NO
+		FROM
+			(
+			SELECT MOVIE_NAME, POSTER, MOVIE_NO, ROWNUM RNUM
+			FROM
+				(SELECT DISTINCT MOVIE_NAME, POSTER, MOVIE_NO
+				FROM
+					(
+						(SELECT dt.MOVIE_NAME, dt.POSTER, m.MOVIE_NO, t.TICKETING_DATE
+							FROM DATE_TIME dt, MOVIE m, TICKETING t
+							WHERE 
+								dt.MOVIE_NAME = m.MOVIE_TITLE
+								AND dt.DATE_TIME_NO = t.DATE_TIME_NO
+								AND t.TICKETER_PHONE = #{ticketerPhone}
+							ORDER BY t.TICKETING_DATE DESC)
+					)
+				)
+			)
+		WHERE RNUM BETWEEN #{startRowNum} AND #{endRowNum}
+	</select>
+	
+	<select id="getSeenMovieCnt" parameterType="String" resultType="int">
+	SELECT count(DISTINCT MOVIE_NAME) totalCnt
+	FROM
+		(
+			(SELECT dt.MOVIE_NAME, dt.POSTER, m.MOVIE_NO, t.TICKETING_DATE
+				FROM DATE_TIME dt, MOVIE m, TICKETING t
+				WHERE 
+					dt.MOVIE_NAME = m.MOVIE_TITLE
+					AND dt.DATE_TIME_NO = t.DATE_TIME_NO
+					AND t.TICKETER_PHONE = #{value}
+				ORDER BY t.TICKETING_DATE DESC)
+		)
+	</select>
+
+
+
+</mapper>
