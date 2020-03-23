@@ -18,7 +18,7 @@
       – 2Layer / MVC 
     ■ Front End  
       – HTML5 / CSS3 / Bootstrap / javascript / jQuery / Ajax / Datepicker / FullCalendar / summernote/ Moment.js 
-        Font Awesome / DWL Carousel / Google Font / sweet Alert  
+        Font Awesome / OWL Carousel / Google Font / sweet Alert  
     ■ Back End 
       – Java / Spring Framework / Mybatis / Apache / ApacheTomcat 
     ■ DB / Tool  
