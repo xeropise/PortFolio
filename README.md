@@ -236,7 +236,7 @@
       ( 크롬드라이버 작동이니 드라이버가 반드시있어야합니다 )
       
   2. 예매를 참조 하고 싶은 경우,
-  => com.mm.service.domain // Ticketing.java,  DateTime.java
+  => com.mmm.service.domain // Ticketing.java,  DateTime.java
      com.mmm.service.ticketing 모두
      com.mmm.service.ticketing.impl
      
