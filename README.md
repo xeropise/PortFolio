@@ -228,7 +228,7 @@
   ***다음 패키지를 참조해주세요 ***
   
   0. 공통
-  => com.mmm.common // JavaUtil.java
+  => com.mmm.common // JavaUtil.java  
      com.mmm.common // Search.java
   
   1. 크롤링을 참조하고 싶은 경우
