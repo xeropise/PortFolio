@@ -423,6 +423,7 @@ $(function(){
 		//console.log('${movieName}');
 		if($(item).attr('title')=='${movieName}'){
 			$(item).trigger("click");
+			break;
 		}
 	})
 	
@@ -646,11 +647,11 @@ $(function(){
 
         	
      	<form>
-     	<input type="hidden" name="movieName">
-     	<input type="hidden" name="franchise">
-     	<input type="hidden" name="theaterName">
-     	<input type="hidden" name="screenDate">
-     	<input type="hidden" name="screenTime">
+	     	<input type="hidden" name="movieName">
+	     	<input type="hidden" name="franchise">
+	     	<input type="hidden" name="theaterName">
+	     	<input type="hidden" name="screenDate">
+	     	<input type="hidden" name="screenTime">
      	</form>
         	
   <!-- 하단 진행 바  --> 
@@ -691,7 +692,7 @@ function formatToDate(x){
 			 returnArray.push(month);
 		 }
 		 //클로저 활용 예제.. 안에 내부함수를 만들어서 함수 실행이 끝나도 로컬 변수 참조가능
-		 //개잘짠듯 ㅎㅎ;
+		 
 		 return function() {
 			return returnArray;
 		 }

@@ -1284,38 +1284,8 @@ $(function(){
 					totalArray[index].economy();
 					totalArray[index].flagTrue();
 					$(this).addClass("sequence"+index);
-					$("#ticket_tnb > div > div.info.seat > div.row.seat_no.colspan3").children().first().next().text(totalArray[index].seatNo);
-					$("#ticket_tnb > div > div.info.seat > div.row.seat_no.colspan3").children().first().next().attr("title", totalArray[index].seatNo);
-					///// '일반' 만 선택했을 경우
-					if(nName == '일반' && nNumber != '0' && yNumber == '0' && sNumber == '0'){
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-adult").children().first().next().text(totalArray[index].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-final").children().first().next().text(totalArray[index].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원");
-						$("#ticket_tnb > div > div.info.payment-ticket").css("display", "block");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-adult").css("display", "block");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-youth").css("display", "none");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-special").css("display", "none");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-final").css("display", "block");
-						
-					}
-					///// '청소년' 만 선택했을 경우
-					if(yName == '청소년' && yNumber != '0' && nNumber == '0' && sNumber == '0'){
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-youth").children().first().next().text(totalArray[index].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-final").children().first().next().text(totalArray[index].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원");
-						$("#ticket_tnb > div > div.info.payment-ticket").css("display", "block");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-adult").css("display", "none");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-youth").css("display", "block");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-special").css("display", "none");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-final").css("display", "block");
-					}
-					///// '우대' 만 선택했을 경우
-					if(sName == '우대' && sNumber != '0' && yNumber == '0' && nNumber == '0'){
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-special").children().first().next().text(totalArray[index].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-final").children().first().next().text(totalArray[index].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원");
-						$("#ticket_tnb > div > div.info.payment-ticket").css("display", "block");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-adult").css("display", "none");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-youth").css("display", "none");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-special").css("display", "block");
-						$("#ticket_tnb > div > div.info.payment-ticket > div.row.payment-final").css("display", "block");
+					
+
 					}
 				}else if($(this).siblings().first().hasClass("standard")){
 					totalArray[index].restore();
